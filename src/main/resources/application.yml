@@ -1,0 +1,17 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gst_db #?options=-c%20TimeZone=UTC
+    username: gst_user
+    password: mypassword
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    org:
+      postgresql: DEBUG

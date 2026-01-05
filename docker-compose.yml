@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: gst_db
+    restart: always
+    environment:
+      POSTGRES_USER: gst_user
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: gst_db
+#      TZ: Asia/Kolkata
+#      PGTZ: Asia/Kolkata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+#    command: [ "postgres", "-c", "timezone=Asia/Kolkata" ]
+
+volumes:
+  postgres_data:

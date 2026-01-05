@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: gst_mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gst_db
+      MYSQL_USER: gst_user
+      MYSQL_PASSWORD: mypassword
+      TZ: UTC
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command:
+      [
+        "--default-time-zone=+00:00",
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci"
+      ]
+
+volumes:
+  mysql_data:

@@ -1,0 +1,288 @@
+{
+  "info": {
+    "name": "Master Data Service - v1",
+    "description": "CRUD APIs for Master Data with pagination and soft delete",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081/api/v1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Role",
+      "item": [
+        {
+          "name": "Get Roles",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/roles?page=0&size=10&role_code=ADMIN&is_active=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" },
+                { "key": "role_code", "value": "ADMIN" },
+                { "key": "is_active", "value": "true" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleCode\": \"HR\",\n  \"roleName\": \"Human Resources\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Role By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/roles/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/roles/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleName\": \"Admin Updated\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/roles/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Designation",
+      "item": [
+        {
+          "name": "Get Designations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/designations?page=0&size=10&designation_name=Engineer",
+              "host": ["{{baseUrl}}"],
+              "path": ["designations"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" },
+                { "key": "designation_name", "value": "Engineer" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Designation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/designations",
+              "host": ["{{baseUrl}}"],
+              "path": ["designations"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designationCode\": \"SE\",\n  \"designationName\": \"Software Engineer\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Qualification",
+      "item": [
+        {
+          "name": "Get Qualifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/qualifications?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["qualifications"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Qualification",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/qualifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["qualifications"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qualificationCode\": \"BTECH\",\n  \"qualificationName\": \"Bachelor of Technology\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "City",
+      "item": [
+        {
+          "name": "Get Cities",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cities?page=0&size=10&state_name=Maharashtra",
+              "host": ["{{baseUrl}}"],
+              "path": ["cities"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" },
+                { "key": "state_name", "value": "Maharashtra" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create City",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cities",
+              "host": ["{{baseUrl}}"],
+              "path": ["cities"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cityCode\": \"PUN\",\n  \"cityName\": \"Pune\",\n  \"stateName\": \"Maharashtra\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Expense",
+      "item": [
+        {
+          "name": "Get Expenses",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/expenses?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["expenses"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/expenses",
+              "host": ["{{baseUrl}}"],
+              "path": ["expenses"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expenseCode\": \"TRVL\",\n  \"expenseName\": \"Travel Expense\",\n  \"isReimbursable\": true\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Employee",
+      "item": [
+        {
+          "name": "Get Employees",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/employees?page=0&size=10&designation_id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["employees"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" },
+                { "key": "designation_id", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees",
+              "host": ["{{baseUrl}}"],
+              "path": ["employees"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeCode\": \"EMP001\",\n  \"firstName\": \"Rahul\",\n  \"lastName\": \"Sharma\",\n  \"designationId\": 1,\n  \"roleId\": 1\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
