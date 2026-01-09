@@ -8,4 +8,7 @@ import lombok.Setter;
 public class RoleRequest {
     private String roleCode;
     private String roleName;
+    private String description;
+    private Boolean isActive;
+    private Boolean isSystemRole;
 }

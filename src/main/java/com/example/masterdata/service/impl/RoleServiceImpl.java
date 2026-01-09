@@ -3,6 +3,8 @@ package com.example.masterdata.service.impl;
 import com.example.masterdata.dto.RoleRequest;
 import com.example.masterdata.dto.RoleResponse;
 import com.example.masterdata.entity.RoleMasterEntity;
+import com.example.masterdata.exceptions.BusinessException;
+import com.example.masterdata.exceptions.ResourceNotFoundException;
 import com.example.masterdata.repository.RoleMasterRepository;
 import com.example.masterdata.service.RoleService;
 import jakarta.persistence.EntityNotFoundException;
@@ -54,6 +56,9 @@ public class RoleServiceImpl implements RoleService {
         RoleMasterEntity e = new RoleMasterEntity();
         e.setRoleCode(req.getRoleCode());
         e.setRoleName(req.getRoleName());
+        e.setDescription(req.getDescription());
+        e.setIsActive(req.getIsActive() != null ? req.getIsActive() : true);
+        e.setIsSystemRole(req.getIsSystemRole() != null ? req.getIsSystemRole() : false);
         return toResponse(repository.save(e));
     }
 
@@ -73,9 +78,16 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public void delete(Long id) {
-        RoleMasterEntity e = repository.findById(id).orElseThrow();
-        e.setIsDeleted(true);
-        e.setDeletedAt(LocalDateTime.now());
+        RoleMasterEntity entity = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Role not found with id: " + id));
+
+        if (entity.getIsSystemRole()) {
+            throw new BusinessException("System role cannot be deleted");
+        }
+
+        entity.setIsDeleted(true);
+        entity.setDeletedAt(LocalDateTime.now());
     }
 
     private RoleResponse toResponse(RoleMasterEntity e) {
@@ -84,6 +96,8 @@ public class RoleServiceImpl implements RoleService {
         r.setRoleCode(e.getRoleCode());
         r.setRoleName(e.getRoleName());
         r.setIsActive(e.getIsActive());
+        r.setDescription(e.getDescription());
+        r.setRoleType(e.getIsSystemRole() ? "SYSTEM" : "NORMAL");
         return r;
     }
 }

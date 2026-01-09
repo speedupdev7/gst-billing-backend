@@ -10,4 +10,6 @@ public class RoleResponse {
     private String roleCode;
     private String roleName;
     private Boolean isActive;
+    private String description;
+    private String roleType;
 }
