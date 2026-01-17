@@ -3,6 +3,7 @@ package com.example.masterdata.service.impl;
 import com.example.masterdata.dto.DesignationRequest;
 import com.example.masterdata.dto.DesignationResponse;
 import com.example.masterdata.entity.DesignationMasterEntity;
+import com.example.masterdata.exceptions.ResourceNotFoundException;
 import com.example.masterdata.repository.DesignationMasterRepository;
 import com.example.masterdata.service.DesignationService;
 import jakarta.persistence.EntityNotFoundException;
@@ -12,8 +13,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.function.Consumer;
 
 @Service
 @Transactional
@@ -52,14 +55,26 @@ public class DesignationServiceImpl implements DesignationService {
 
     @Override
     public DesignationResponse update(Long id, DesignationRequest r) {
-        DesignationMasterEntity e = repository.findById(id).orElseThrow();
+        DesignationMasterEntity e = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    "Designation not found with id: " + id));
         e.setDesignationName(r.getDesignationName());
+        updateIfPresent(r.getDesignationCode(), e::setDesignationCode);
+        updateIfPresent(r.getDesignationName(), e::setDesignationName);
+        updateIfPresent(r.getDescription(), e::setDescription);
         return map(e);
+    }
+
+    private void updateIfPresent(String value, Consumer<String> setter) {
+        if (StringUtils.hasText(value)) {
+            setter.accept(value);
+        }
     }
 
     @Override
     public void delete(Long id) {
-        DesignationMasterEntity e = repository.findById(id).orElseThrow();
+        DesignationMasterEntity e = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Designation not found"));
         e.setIsDeleted(true);
         e.setDeletedAt(LocalDateTime.now());
     }
@@ -67,6 +82,7 @@ public class DesignationServiceImpl implements DesignationService {
     private DesignationResponse map(DesignationMasterEntity e) {
         DesignationResponse r = new DesignationResponse();
         r.setDesignationId(e.getDesignationId());
+        r.setDesignationCode(e.getDesignationCode()) ;
         r.setDesignationName(e.getDesignationName());
         r.setIsActive(e.getIsActive());
         return r;

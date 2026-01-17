@@ -5,8 +5,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class DesignationRequest {
-    private String designationCode;
-    private String designationName;
+public class ExpensesRequest {
+    private String expenseCode;
+    private String expenseName;
     private String description;
+    private Boolean isReimbursable;
 }

@@ -8,4 +8,5 @@ import lombok.Getter;
 public class QualificationRequest {
     private String qualificationCode;
     private String qualificationName;
+    private String description;
 }

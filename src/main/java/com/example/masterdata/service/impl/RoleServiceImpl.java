@@ -48,7 +48,7 @@ public class RoleServiceImpl implements RoleService {
         return repository.findById(id)
                 .filter(r -> !r.getIsDeleted())
                 .map(this::toResponse)
-                .orElseThrow(() -> new EntityNotFoundException("Role not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + id));
     }
 
     @Override
@@ -64,7 +64,9 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public RoleResponse update(Long id, RoleRequest req) {
-        RoleMasterEntity e = repository.findById(id).orElseThrow();
+        RoleMasterEntity e = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    "Role not found with id: " + id));
         if(!req.getRoleCode().isEmpty()){
             e.setRoleCode(req.getRoleCode());
         }

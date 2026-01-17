@@ -7,6 +7,11 @@ spring:
     username: gst_user
     password: mypassword
 
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
