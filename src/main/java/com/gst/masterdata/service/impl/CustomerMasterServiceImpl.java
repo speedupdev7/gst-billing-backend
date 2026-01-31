@@ -1,0 +1,63 @@
+package com.gst.masterdata.service.impl;
+
+import com.gst.masterdata.dto.CustomerMasterDTO;
+import com.gst.masterdata.entity.CustomerMasterEntity;
+import com.gst.masterdata.repository.CustomerMasterRepository;
+import com.gst.masterdata.service.CustomerMasterService;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class CustomerMasterServiceImpl implements CustomerMasterService {
+
+    @Autowired
+    private CustomerMasterRepository customerMasterRepository;
+
+    @Override
+    public CustomerMasterDTO createCustomer(CustomerMasterDTO customerMasterDTO) {
+        CustomerMasterEntity entity = new CustomerMasterEntity();
+        BeanUtils.copyProperties(customerMasterDTO, entity);
+        CustomerMasterEntity savedEntity = customerMasterRepository.save(entity);
+        CustomerMasterDTO responseDTO = new CustomerMasterDTO();
+        BeanUtils.copyProperties(savedEntity, responseDTO);
+        return responseDTO;
+    }
+
+    @Override
+    public CustomerMasterDTO updateCustomer(Long customerId, CustomerMasterDTO customerMasterDTO) {
+        CustomerMasterEntity entity = customerMasterRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        BeanUtils.copyProperties(customerMasterDTO, entity, "customerId");
+        CustomerMasterEntity updatedEntity = customerMasterRepository.save(entity);
+        CustomerMasterDTO responseDTO = new CustomerMasterDTO();
+        BeanUtils.copyProperties(updatedEntity, responseDTO);
+        return responseDTO;
+    }
+
+    @Override
+    public CustomerMasterDTO getCustomerById(Long customerId) {
+        CustomerMasterEntity entity = customerMasterRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        CustomerMasterDTO responseDTO = new CustomerMasterDTO();
+        BeanUtils.copyProperties(entity, responseDTO);
+        return responseDTO;
+    }
+
+    @Override
+    public List<CustomerMasterDTO> getAllCustomers() {
+        return customerMasterRepository.findAll().stream().map(entity -> {
+            CustomerMasterDTO dto = new CustomerMasterDTO();
+            BeanUtils.copyProperties(entity, dto);
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteCustomer(Long customerId) {
+        customerMasterRepository.deleteById(customerId);
+    }
+}

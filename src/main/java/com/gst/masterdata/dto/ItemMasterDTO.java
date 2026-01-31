@@ -1,0 +1,18 @@
+package com.gst.masterdata.dto;
+
+import lombok.Getter;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+
+@Getter
+@Setter
+public class ItemMasterDTO {
+    private Long itemId;
+    private String itemCode;
+    private String itemName;
+    private String hsnCode;
+    private String unit;
+    private BigDecimal gstRate;
+    private BigDecimal price;
+}
