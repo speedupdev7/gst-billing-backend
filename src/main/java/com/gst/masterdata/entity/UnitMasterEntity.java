@@ -36,5 +36,22 @@ public class UnitMasterEntity extends BaseMasterEntity {
 
     @Column(name = "mobile_no", length = 15)
     private String mobileNo;
-}
 
+    @Column(name = "pan", length = 10)
+    private String pan;
+
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "pin_code", length = 10)
+    private String pinCode;
+
+    @Column(name = "bank_name")
+    private String bankName;
+
+    @Column(name = "account_number", length = 20)
+    private String accountNumber;
+
+    @Column(name = "ifsc_code", length = 11)
+    private String ifscCode;
+}

@@ -23,6 +23,15 @@ public class RoleController {
             @RequestParam(required = false) Boolean is_active,
             Pageable pageable) {
 
+        // Add default sorting by role_id in descending order if no sort is specified
+        if (pageable.getSort().isEmpty()) {
+            pageable = org.springframework.data.domain.PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "roleId")
+            );
+        }
+
         return service.getRoles(role_code, role_name, is_active, pageable);
     }
 
@@ -48,4 +57,3 @@ public class RoleController {
         service.delete(id);
     }
 }
-

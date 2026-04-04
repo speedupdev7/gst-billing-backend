@@ -49,7 +49,7 @@ public class UnitMasterServiceImpl implements UnitMasterService {
 
     @Override
     public List<UnitMasterDTO> getAllUnits() {
-        return unitMasterRepository.findAll().stream().map(entity -> {
+        return unitMasterRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "unitId")).stream().map(entity -> {
             UnitMasterDTO dto = new UnitMasterDTO();
             BeanUtils.copyProperties(entity, dto);
             return dto;

@@ -20,6 +20,16 @@ public class DesignationController {
     public Page<DesignationResponse> getAll(
             @RequestParam(required = false) String designation_name,
             Pageable pageable) {
+
+        // Add default sorting by designation_id in descending order if no sort is specified
+        if (pageable.getSort().isEmpty()) {
+            pageable = org.springframework.data.domain.PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "designationId")
+            );
+        }
+
         return service.getAll(designation_name, pageable);
     }
 
@@ -45,4 +55,3 @@ public class DesignationController {
         service.delete(id);
     }
 }
-

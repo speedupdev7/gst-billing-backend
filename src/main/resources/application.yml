@@ -9,8 +9,8 @@ spring:
     schema: public
 
   flyway:
-    enabled: true
-    baseline-on-migrate: true
+    enabled: false
+    baseline-on-migrate: false
     schemas: public
 
 

@@ -14,4 +14,10 @@ public class UnitMasterDTO {
     private String stateCode;
     private String email;
     private String mobileNo;
+    private String pan;
+    private String city;
+    private String pinCode;
+    private String bankName;
+    private String accountNumber;
+    private String ifscCode;
 }

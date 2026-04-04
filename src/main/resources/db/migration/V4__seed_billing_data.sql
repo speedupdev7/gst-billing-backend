@@ -9,18 +9,18 @@
 -- ======================
 -- 1. UNITS (unit_master)
 -- ======================
-insert into unit_master (unit_name, gstin, address, state, state_code, email, mobile_no, is_active)
+insert into unit_master (unit_name, gstin, address, state, state_code, email, mobile_no, pan, city, pin_code, bank_name, account_number, ifsc_code, is_active)
 values
-('Acme Industries', '27AAACM1234A1Z1', '123 Industrial Area, Pune', 'Maharashtra', '27', 'acme@example.com', '9876543210', true),
-('Beta Traders', '07AABBT1234B1Z2', '45 Market Road, Delhi', 'Delhi', '07', 'beta@example.com', '9876500001', true),
-('Gamma Enterprises', '29AAAGM1234C1Z3', '9 Residency Rd, Bengaluru', 'Karnataka', '29', 'gamma@example.com', '9876500002', true),
-('Delta Pvt Ltd', '33AADDT1234D1Z4', '77 Business Park, Chennai', 'Tamil Nadu', '33', 'delta@example.com', '9876500003', true),
-('Epsilon Co', '19AAAEI1234E1Z5', '12 Hill St, Jaipur', 'Rajasthan', '08', 'epsilon@example.com', '9876500004', true),
-('Zeta Solutions', '24AAAZT1234F1Z6', '88 Tech Park, Surat', 'Gujarat', '24', 'zeta@example.com', '9876500005', true),
-('Eta Logistics', '10AAAEL1234G1Z7', '3 Cargo Ln, Kolkata', 'West Bengal', '19', 'eta@example.com', '9876500006', true),
-('Theta Services', '36AAATH1234H1Z8', '56 Service Ave, Mumbai', 'Maharashtra', '27', 'theta@example.com', '9876500007', true),
-('Iota Retail', '22AAAI1234I1Z9', '101 Mall Rd, Lucknow', 'Uttar Pradesh', '09', 'iota@example.com', '9876500008', true),
-('Kappa Manufacturing', '17AAAKP1234J1Z0', '200 Factory St, Bhopal', 'Madhya Pradesh', '23', 'kappa@example.com', '9876500009', true)
+('Acme Industries', '27AAACM1234A1Z1', '123 Industrial Area, Pune', 'Maharashtra', '27', 'acme@example.com', '9876543210', 'AAACM1234A', 'Pune', '411001', 'State Bank of India', '123456789012', 'SBIN0001234', true),
+('Beta Traders', '07AABBT1234B1Z2', '45 Market Road, Delhi', 'Delhi', '07', 'beta@example.com', '9876500001', 'AABBT1234B', 'New Delhi', '110001', 'HDFC Bank', '234567890123', 'HDFC0002345', true),
+('Gamma Enterprises', '29AAAGM1234C1Z3', '9 Residency Rd, Bengaluru', 'Karnataka', '29', 'gamma@example.com', '9876500002', 'AAAGM1234C', 'Bengaluru', '560001', 'ICICI Bank', '345678901234', 'ICIC0003456', true),
+('Delta Pvt Ltd', '33AADDT1234D1Z4', '77 Business Park, Chennai', 'Tamil Nadu', '33', 'delta@example.com', '9876500003', 'AADDT1234D', 'Chennai', '600001', 'Axis Bank', '456789012345', 'UTIB0004567', true),
+('Epsilon Co', '19AAAEI1234E1Z5', '12 Hill St, Jaipur', 'Rajasthan', '08', 'epsilon@example.com', '9876500004', 'AAAEI1234E', 'Jaipur', '302001', 'Punjab National Bank', '567890123456', 'PUNB0056789', true),
+('Zeta Solutions', '24AAAZT1234F1Z6', '88 Tech Park, Surat', 'Gujarat', '24', 'zeta@example.com', '9876500005', 'AAAZT1234F', 'Surat', '395007', 'Bank of Baroda', '678901234567', 'BARB0067890', true),
+('Eta Logistics', '10AAAEL1234G1Z7', '3 Cargo Ln, Kolkata', 'West Bengal', '19', 'eta@example.com', '9876500006', 'AAAEL1234G', 'Kolkata', '700001', 'Union Bank of India', '789012345678', 'UBIN0078901', true),
+('Theta Services', '36AAATH1234H1Z8', '56 Service Ave, Mumbai', 'Maharashtra', '27', 'theta@example.com', '9876500007', 'AAATH1234H', 'Mumbai', '400001', 'IDBI Bank', '890123456789', 'IBKL0089012', true),
+('Iota Retail', '22AAAI1234I1Z9', '101 Mall Rd, Lucknow', 'Uttar Pradesh', '09', 'iota@example.com', '9876500008', 'AAAI1234I', 'Lucknow', '226001', 'Canara Bank', '901234567890', 'CNRB0090123', true),
+('Kappa Manufacturing', '17AAAKP1234J1Z0', '200 Factory St, Bhopal', 'Madhya Pradesh', '23', 'kappa@example.com', '9876500009', 'AAAKP1234J', 'Bhopal', '462001', 'Central Bank of India', '012345678901', 'CBIN0012345', true)
 ON CONFLICT DO NOTHING;
 
 -- Ensure sequence is in sync
@@ -29,18 +29,18 @@ select setval(pg_get_serial_sequence('unit_master','unit_id'), (select coalesce(
 -- ======================
 -- 2. ITEMS (item_master)
 -- ======================
-insert into item_master (item_code, item_name, hsn_code, unit, gst_rate, price, is_active)
+insert into item_master (item_code, item_name, hsn_code, unit, gst_rate, purchase_price, sale_price, mrp, opening_stock, is_active)
 values
-('ITM-1001', 'Plain T-Shirt', '6109', 'PCS', 18.00, 299.00, true),
-('ITM-1002', 'Formal Shirt', '6205', 'PCS', 12.00, 799.00, true),
-('ITM-1003', 'Jeans', '6203', 'PCS', 18.00, 1299.00, true),
-('ITM-1004', 'Laptop Model A', '8471', 'PCS', 18.00, 45999.00, true),
-('ITM-1005', 'USB Cable', '8544', 'PCS', 18.00, 199.00, true),
-('ITM-1006', 'Office Chair', '9401', 'PCS', 18.00, 5999.00, true),
-('ITM-1007', 'Notebook 200pg', '4820', 'PCS', 12.00, 49.00, true),
-('ITM-1008', 'Pen Pack', '9608', 'PCS', 12.00, 99.00, true),
-('ITM-1009', 'LED Bulb 9W', '8539', 'PCS', 18.00, 249.00, true),
-('ITM-1010', 'Coffee Mug', '6912', 'PCS', 18.00, 149.00, true)
+('ITM-1001', 'Plain T-Shirt', '6109', 'PCS', 18.00, 199.00, 299.00, 349.00, 100, true),
+('ITM-1002', 'Formal Shirt', '6205', 'PCS', 12.00, 599.00, 799.00, 899.00, 75, true),
+('ITM-1003', 'Jeans', '6203', 'PCS', 18.00, 999.00, 1299.00, 1499.00, 50, true),
+('ITM-1004', 'Laptop Model A', '8471', 'PCS', 18.00, 38999.00, 45999.00, 49999.00, 25, true),
+('ITM-1005', 'USB Cable', '8544', 'PCS', 18.00, 149.00, 199.00, 249.00, 200, true),
+('ITM-1006', 'Office Chair', '9401', 'PCS', 18.00, 4999.00, 5999.00, 6999.00, 30, true),
+('ITM-1007', 'Notebook 200pg', '4820', 'PCS', 12.00, 39.00, 49.00, 59.00, 150, true),
+('ITM-1008', 'Pen Pack', '9608', 'PCS', 12.00, 79.00, 99.00, 119.00, 120, true),
+('ITM-1009', 'LED Bulb 9W', '8539', 'PCS', 18.00, 199.00, 249.00, 299.00, 80, true),
+('ITM-1010', 'Coffee Mug', '6912', 'PCS', 18.00, 119.00, 149.00, 179.00, 90, true)
 ON CONFLICT DO NOTHING;
 
 select setval(pg_get_serial_sequence('item_master','item_id'), (select coalesce(max(item_id),0) from item_master));

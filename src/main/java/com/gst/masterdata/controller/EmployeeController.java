@@ -23,6 +23,15 @@ public class EmployeeController {
             @RequestParam(required = false) Boolean is_active,
             Pageable pageable) {
 
+        // Add default sorting by employee_id in descending order if no sort is specified
+        if (pageable.getSort().isEmpty()) {
+            pageable = org.springframework.data.domain.PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "employeeId")
+            );
+        }
+
         return service.getEmployees(employee_code, employee_name, is_active, pageable);
     }
 
@@ -48,4 +57,3 @@ public class EmployeeController {
         service.delete(id);
     }
 }
-

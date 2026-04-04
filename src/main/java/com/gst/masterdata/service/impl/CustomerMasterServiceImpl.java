@@ -49,7 +49,7 @@ public class CustomerMasterServiceImpl implements CustomerMasterService {
 
     @Override
     public List<CustomerMasterDTO> getAllCustomers() {
-        return customerMasterRepository.findAll().stream().map(entity -> {
+        return customerMasterRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "customerId")).stream().map(entity -> {
             CustomerMasterDTO dto = new CustomerMasterDTO();
             BeanUtils.copyProperties(entity, dto);
             return dto;

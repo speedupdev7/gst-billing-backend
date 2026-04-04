@@ -84,7 +84,9 @@ public class QualificationServiceImpl implements QualificationService {
     private QualificationResponse map(QualificationMasterEntity e) {
         QualificationResponse r = new QualificationResponse();
         r.setQualificationId(e.getQualificationId());
+        r.setQualificationCode(e.getQualificationCode());
         r.setQualificationName(e.getQualificationName());
+        r.setDescription(e.getDescription());
         r.setIsActive(e.getIsActive());
         return r;
     }

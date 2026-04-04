@@ -49,7 +49,7 @@ public class SupplierMasterServiceImpl implements SupplierMasterService {
 
     @Override
     public List<SupplierMasterDTO> getAllSuppliers() {
-        return supplierMasterRepository.findAll().stream().map(entity -> {
+        return supplierMasterRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "supplierId")).stream().map(entity -> {
             SupplierMasterDTO dto = new SupplierMasterDTO();
             BeanUtils.copyProperties(entity, dto);
             return dto;

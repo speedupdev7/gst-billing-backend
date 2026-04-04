@@ -23,6 +23,9 @@ public class ItemMasterEntity extends BaseMasterEntity {
     @Column(name = "item_name", nullable = false)
     private String itemName;
 
+    @Column(name = "item_name_details")
+    private String itemNameDetails;
+
     @Column(name = "hsn_code", length = 20)
     private String hsnCode;
 
@@ -32,7 +35,15 @@ public class ItemMasterEntity extends BaseMasterEntity {
     @Column(name = "gst_rate")
     private BigDecimal gstRate;
 
-    @Column(name = "price")
-    private BigDecimal price;
-}
+    @Column(name = "purchase_price")
+    private BigDecimal purchasePrice;
 
+    @Column(name = "sale_price")
+    private BigDecimal salePrice;
+
+    @Column(name = "mrp")
+    private BigDecimal mrp;
+
+    @Column(name = "opening_stock")
+    private Integer openingStock;
+}

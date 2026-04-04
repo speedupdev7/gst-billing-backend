@@ -49,7 +49,7 @@ public class ItemMasterServiceImpl implements ItemMasterService {
 
     @Override
     public List<ItemMasterDTO> getAllItems() {
-        return itemMasterRepository.findAll().stream().map(entity -> {
+        return itemMasterRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "itemId")).stream().map(entity -> {
             ItemMasterDTO dto = new ItemMasterDTO();
             BeanUtils.copyProperties(entity, dto);
             return dto;

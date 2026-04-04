@@ -74,6 +74,18 @@ public class RoleServiceImpl implements RoleService {
             e.setRoleName(req.getRoleName());
         }
 
+        if(req.getDescription() != null){
+            e.setDescription(req.getDescription());
+        }
+
+        if(req.getIsActive() != null){
+            e.setIsActive(req.getIsActive());
+        }
+
+        if(req.getIsSystemRole() != null){
+            e.setIsSystemRole(req.getIsSystemRole());
+        }
+
         return toResponse(repository.save(e));
     }
 

@@ -20,6 +20,16 @@ public class QualificationController {
     public Page<QualificationResponse> getAll(
             @RequestParam(required = false) String qualification_name,
             Pageable pageable) {
+
+        // Add default sorting by qualification_id in descending order if no sort is specified
+        if (pageable.getSort().isEmpty()) {
+            pageable = org.springframework.data.domain.PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "qualificationId")
+            );
+        }
+
         return service.getAll(qualification_name, pageable);
     }
 
@@ -45,4 +55,3 @@ public class QualificationController {
         service.delete(id);
     }
 }
-
