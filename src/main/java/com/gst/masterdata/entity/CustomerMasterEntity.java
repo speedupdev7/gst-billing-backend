@@ -21,9 +21,6 @@ public class CustomerMasterEntity extends BaseMasterEntity {
     @Column(name = "gstin", length = 15)
     private String gstin;
 
-    @Column(name = "address")
-    private String address;
-
     @Column(name = "state")
     private String state;
 
@@ -35,5 +32,17 @@ public class CustomerMasterEntity extends BaseMasterEntity {
 
     @Column(name = "mobile_no", length = 15)
     private String mobileNo;
+
+    @Column(name = "customer_type", length = 10)
+    private String customerType;
+
+    @Column(name = "pin_code", length = 100)
+    private String pinCode;
+
+    @Column(name = "district", length = 100)
+    private String district;
+
+    @Column(name = "billing_address")
+    private String billingAddress;
 }
 

@@ -21,7 +21,7 @@ public class InvoiceItemEntity extends BaseMasterEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoice_id", nullable = false)
-    private InvoiceHeaderEntity invoice;
+    private InvoiceRecordEntity invoice;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id", nullable = false)

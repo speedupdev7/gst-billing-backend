@@ -32,7 +32,7 @@ public class GstAdjustmentNoteEntity extends BaseMasterEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "original_invoice_id", nullable = false)
-    private InvoiceHeaderEntity originalInvoice;
+    private InvoiceRecordEntity originalInvoice;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "unit_id", nullable = false)

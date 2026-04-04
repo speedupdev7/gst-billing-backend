@@ -21,7 +21,7 @@ public class InvoiceBalanceEntity extends BaseMasterEntity {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoice_id", nullable = false)
-    private InvoiceHeaderEntity invoice;
+    private InvoiceRecordEntity invoice;
 
     @Column(name = "invoice_amount")
     private BigDecimal invoiceAmount;

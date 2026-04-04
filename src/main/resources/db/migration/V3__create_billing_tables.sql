@@ -7,7 +7,7 @@
 -- =========================================================
 -- 1. INVOICE HEADER
 -- =========================================================
-create table if not exists invoice_header (
+create table if not exists invoice_record (
     invoice_id        bigserial primary key,
     invoice_no        varchar(50) not null unique,
     invoice_date      date not null,
@@ -56,6 +56,7 @@ create table if not exists invoice_item (
     invoice_id      bigint not null,
     item_id         bigint not null,
 
+    batch_code      varchar(20),
     hsn_code        varchar(20),
     quantity        numeric(12,3) not null,
     rate            numeric(12,2) not null,
@@ -79,7 +80,7 @@ create table if not exists invoice_item (
     updated_at      timestamp default current_timestamp,
 
     constraint fk_invoice_item_invoice
-        foreign key (invoice_id) references invoice_header (invoice_id),
+        foreign key (invoice_id) references invoice_record (invoice_id),
 
     constraint fk_invoice_item_item
         foreign key (item_id) references item_master (item_id)
@@ -104,7 +105,7 @@ create table if not exists invoice_payment (
     updated_at   timestamp default current_timestamp,
 
     constraint fk_payment_invoice
-        foreign key (invoice_id) references invoice_header (invoice_id)
+        foreign key (invoice_id) references invoice_record (invoice_id)
 );
 
 -- =========================================================
@@ -128,7 +129,7 @@ create table if not exists invoice_balance (
     updated_at     timestamp default current_timestamp,
 
     constraint fk_balance_invoice
-        foreign key (invoice_id) references invoice_header (invoice_id)
+        foreign key (invoice_id) references invoice_record (invoice_id)
 );
 
 -- =========================================================
@@ -161,7 +162,7 @@ create table if not exists gst_adjustment_note (
     updated_at           timestamp default current_timestamp,
 
     constraint fk_note_invoice
-        foreign key (original_invoice_id) references invoice_header (invoice_id),
+        foreign key (original_invoice_id) references invoice_record (invoice_id),
 
     constraint fk_note_unit
         foreign key (unit_id) references unit_master (unit_id),
@@ -173,8 +174,8 @@ create table if not exists gst_adjustment_note (
 -- =========================================================
 -- 6. AUDIT TRIGGERS
 -- =========================================================
-create trigger trg_invoice_header_updated_at
-before update on invoice_header
+create trigger trg_invoice_record_updated_at
+before update on invoice_record
 for each row execute function set_updated_at();
 
 create trigger trg_invoice_item_updated_at

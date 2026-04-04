@@ -11,10 +11,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "invoice_header")
+@Table(name = "invoice_record")
 @Getter
 @Setter
-public class InvoiceHeaderEntity extends BaseMasterEntity {
+public class InvoiceRecordEntity extends BaseMasterEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

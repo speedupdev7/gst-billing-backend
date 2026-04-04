@@ -52,11 +52,14 @@ create table if not exists customer_master (
     customer_id   bigserial primary key,
     customer_name varchar(200) not null,
     gstin         varchar(15),
-    address       text,
     state         varchar(100),
     state_code    varchar(5),
     email         varchar(150),
     mobile_no     varchar(15),
+    customer_type  varchar(10) not null,
+    pin_code   varchar(10),
+    district    varchar(100),
+    billing_address text,
 
     is_active     boolean default true,
     is_deleted    boolean default false,
@@ -86,3 +89,56 @@ create table if not exists supplier_master (
     created_at    timestamp default current_timestamp,
     updated_at    timestamp default current_timestamp
 );
+
+-- =========================================================
+--  Audit triggers for GST Billing masters
+-- =========================================================
+
+-- Common trigger function (reuse if already exists)
+create or replace function set_updated_at()
+returns trigger as $$
+begin
+    new.updated_at = current_timestamp;
+    return new;
+end;
+$$ language plpgsql;
+
+-- =======================
+-- UNIT MASTER
+-- =======================
+drop trigger if exists trg_unit_updated_at on unit_master;
+create trigger trg_unit_updated_at
+before update on unit_master
+for each row
+execute function set_updated_at();
+
+-- =======================
+-- ITEM MASTER
+-- =======================
+drop trigger if exists trg_item_updated_at on item_master;
+create trigger trg_item_updated_at
+before update on item_master
+for each row
+execute function set_updated_at();
+
+-- =======================
+-- CUSTOMER MASTER
+-- =======================
+drop trigger if exists trg_customer_updated_at on customer_master;
+create trigger trg_customer_updated_at
+before update on customer_master
+for each row
+execute function set_updated_at();
+
+-- =======================
+-- SUPPLIER MASTER
+-- =======================
+drop trigger if exists trg_supplier_updated_at on supplier_master;
+create trigger trg_supplier_updated_at
+before update on supplier_master
+for each row
+execute function set_updated_at();
+
+-- =========================================================
+-- END OF MIGRATION V2
+-- =========================================================
