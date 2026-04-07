@@ -1,5 +1,5 @@
 -- =========================================================
--- Flyway Migration V4
+-- Flyway Migration V7
 -- Description : Seed data for GST Billing masters + transactions
 -- Database    : PostgreSQL
 -- Note        : Inserts at least 10 records into each table and
@@ -180,5 +180,5 @@ ON CONFLICT DO NOTHING;
 select setval(pg_get_serial_sequence('gst_adjustment_note','note_id'), (select coalesce(max(note_id),0) from gst_adjustment_note));
 
 -- =========================================================
--- END OF SEED MIGRATION V4
+-- END OF SEED MIGRATION V7
 -- =========================================================

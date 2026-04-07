@@ -1,9 +1,12 @@
 -- =========================================================
--- Flyway Migration V2
+-- Flyway Migration V2.1
 -- Description : Seed data for Role Master
 -- Database    : PostgreSQL
 -- Note        : Inserts standard roles with permissions
 -- =========================================================
+
+-- Set search path to public
+SET search_path TO public;
 
 -- ======================
 -- ROLE MASTER SEED DATA
@@ -28,6 +31,5 @@ ON CONFLICT (role_code) DO NOTHING;
 select setval(pg_get_serial_sequence('role_master','role_id'), (select coalesce(max(role_id),0) from role_master));
 
 -- =========================================================
--- END OF SEED MIGRATION V2
+-- END OF SEED MIGRATION V2.1
 -- =========================================================
-

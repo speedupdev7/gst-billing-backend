@@ -1,5 +1,5 @@
 -- =========================================================
--- Flyway Migration V7
+-- Flyway Migration V3
 -- Description : GST Billing + Payments + Credit/Debit Notes
 -- Database    : PostgreSQL
 -- =========================================================
@@ -195,5 +195,5 @@ before update on gst_adjustment_note
 for each row execute function set_updated_at();
 
 -- =========================================================
--- END OF MIGRATION V7
+-- END OF MIGRATION V3
 -- =========================================================

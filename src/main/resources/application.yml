@@ -3,14 +3,15 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/gst_db #?options=-c%20TimeZone=UTC
+    url: jdbc:postgresql://localhost:5432/gst_db?currentSchema=public #?options=-c%20TimeZone=UTC
     username: gst_user
     password: mypassword
     schema: public
 
   flyway:
-    enabled: false
-    baseline-on-migrate: false
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
     schemas: public
 
 

@@ -4,6 +4,9 @@
 -- Database    : PostgreSQL
 -- =========================================================
 
+-- Set search path to public
+SET search_path TO public;
+
 -- =======================
 -- 1. ROLE MASTER
 -- =======================

@@ -1,5 +1,5 @@
 -- =========================================================
--- Flyway Migration V4
+-- Flyway Migration V2
 -- Description : Create GST Billing Master tables
 -- Database    : PostgreSQL
 -- =========================================================
