@@ -2,12 +2,14 @@ package com.gst.masterdata.service.impl;
 
 import com.gst.masterdata.dto.CustomerMasterDTO;
 import com.gst.masterdata.entity.CustomerMasterEntity;
+import com.gst.masterdata.exceptions.ResourceNotFoundException;
 import com.gst.masterdata.repository.CustomerMasterRepository;
 import com.gst.masterdata.service.CustomerMasterService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,6 +60,9 @@ public class CustomerMasterServiceImpl implements CustomerMasterService {
 
     @Override
     public void deleteCustomer(Long customerId) {
-        customerMasterRepository.deleteById(customerId);
+        CustomerMasterEntity entity = customerMasterRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + customerId));
+        entity.setIsDeleted(true);
+        entity.setDeletedAt(LocalDateTime.now());
     }
 }

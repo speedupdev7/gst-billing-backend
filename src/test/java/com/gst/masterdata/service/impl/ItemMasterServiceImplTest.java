@@ -92,9 +92,13 @@ class ItemMasterServiceImplTest {
     }
 
     @Test
-    void deleteItem_shouldCallRepositoryDeleteById() {
+    void deleteItem_shouldSoftDeleteEntity() {
+        when(itemMasterRepository.findById(1L)).thenReturn(Optional.of(entity));
+
         service.deleteItem(1L);
 
-        verify(itemMasterRepository).deleteById(1L);
+        assertTrue(entity.getIsDeleted());
+        assertNotNull(entity.getDeletedAt());
+        verify(itemMasterRepository, never()).deleteById(any());
     }
 }

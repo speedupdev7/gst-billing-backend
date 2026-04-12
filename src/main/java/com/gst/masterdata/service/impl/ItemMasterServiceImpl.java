@@ -2,12 +2,14 @@ package com.gst.masterdata.service.impl;
 
 import com.gst.masterdata.dto.ItemMasterDTO;
 import com.gst.masterdata.entity.ItemMasterEntity;
+import com.gst.masterdata.exceptions.ResourceNotFoundException;
 import com.gst.masterdata.repository.ItemMasterRepository;
 import com.gst.masterdata.service.ItemMasterService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,6 +60,9 @@ public class ItemMasterServiceImpl implements ItemMasterService {
 
     @Override
     public void deleteItem(Long itemId) {
-        itemMasterRepository.deleteById(itemId);
+        ItemMasterEntity entity = itemMasterRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
+        entity.setIsDeleted(true);
+        entity.setDeletedAt(LocalDateTime.now());
     }
 }

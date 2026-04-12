@@ -80,9 +80,13 @@ class UnitMasterServiceImplTest {
     }
 
     @Test
-    void deleteUnit_shouldCallDeleteById() {
+    void deleteUnit_shouldSoftDeleteEntity() {
+        when(unitMasterRepository.findById(1L)).thenReturn(Optional.of(entity));
+
         service.deleteUnit(1L);
 
-        verify(unitMasterRepository).deleteById(1L);
+        assertTrue(entity.getIsDeleted());
+        assertNotNull(entity.getDeletedAt());
+        verify(unitMasterRepository, never()).deleteById(any());
     }
 }

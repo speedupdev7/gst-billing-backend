@@ -82,9 +82,13 @@ class SupplierMasterServiceImplTest {
     }
 
     @Test
-    void deleteSupplier_shouldCallDeleteById() {
+    void deleteSupplier_shouldSoftDeleteEntity() {
+        when(supplierMasterRepository.findById(1L)).thenReturn(Optional.of(entity));
+
         service.deleteSupplier(1L);
 
-        verify(supplierMasterRepository).deleteById(1L);
+        assertTrue(entity.getIsDeleted());
+        assertNotNull(entity.getDeletedAt());
+        verify(supplierMasterRepository, never()).deleteById(any());
     }
 }

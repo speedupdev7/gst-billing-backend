@@ -2,12 +2,14 @@ package com.gst.masterdata.service.impl;
 
 import com.gst.masterdata.dto.SupplierMasterDTO;
 import com.gst.masterdata.entity.SupplierMasterEntity;
+import com.gst.masterdata.exceptions.ResourceNotFoundException;
 import com.gst.masterdata.repository.SupplierMasterRepository;
 import com.gst.masterdata.service.SupplierMasterService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,6 +60,9 @@ public class SupplierMasterServiceImpl implements SupplierMasterService {
 
     @Override
     public void deleteSupplier(Long supplierId) {
-        supplierMasterRepository.deleteById(supplierId);
+        SupplierMasterEntity entity = supplierMasterRepository.findById(supplierId)
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + supplierId));
+        entity.setIsDeleted(true);
+        entity.setDeletedAt(LocalDateTime.now());
     }
 }

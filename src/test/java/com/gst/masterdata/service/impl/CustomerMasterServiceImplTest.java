@@ -105,9 +105,13 @@ class CustomerMasterServiceImplTest {
     }
 
     @Test
-    void deleteCustomer_shouldCallRepositoryDelete() {
+    void deleteCustomer_shouldSoftDeleteEntity() {
+        when(customerMasterRepository.findById(1L)).thenReturn(Optional.of(entity));
+
         service.deleteCustomer(1L);
 
-        verify(customerMasterRepository, times(1)).deleteById(1L);
+        assertTrue(entity.getIsDeleted());
+        assertNotNull(entity.getDeletedAt());
+        verify(customerMasterRepository, never()).deleteById(any());
     }
 }

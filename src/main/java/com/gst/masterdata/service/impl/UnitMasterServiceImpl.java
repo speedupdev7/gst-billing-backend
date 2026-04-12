@@ -2,12 +2,14 @@ package com.gst.masterdata.service.impl;
 
 import com.gst.masterdata.dto.UnitMasterDTO;
 import com.gst.masterdata.entity.UnitMasterEntity;
+import com.gst.masterdata.exceptions.ResourceNotFoundException;
 import com.gst.masterdata.repository.UnitMasterRepository;
 import com.gst.masterdata.service.UnitMasterService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,6 +60,9 @@ public class UnitMasterServiceImpl implements UnitMasterService {
 
     @Override
     public void deleteUnit(Long unitId) {
-        unitMasterRepository.deleteById(unitId);
+        UnitMasterEntity entity = unitMasterRepository.findById(unitId)
+                .orElseThrow(() -> new ResourceNotFoundException("Unit not found with id: " + unitId));
+        entity.setIsDeleted(true);
+        entity.setDeletedAt(LocalDateTime.now());
     }
 }
