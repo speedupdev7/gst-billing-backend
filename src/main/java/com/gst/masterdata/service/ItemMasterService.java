@@ -9,5 +9,6 @@ public interface ItemMasterService {
     ItemMasterDTO updateItem(Long itemId, ItemMasterDTO itemMasterDTO);
     ItemMasterDTO getItemById(Long itemId);
     List<ItemMasterDTO> getAllItems();
+    List<ItemMasterDTO> searchItemsByNamePrefix(String itemNamePrefix);
     void deleteItem(Long itemId);
 }

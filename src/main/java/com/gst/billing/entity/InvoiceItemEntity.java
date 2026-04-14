@@ -27,6 +27,9 @@ public class InvoiceItemEntity extends BaseMasterEntity {
     @JoinColumn(name = "item_id", nullable = false)
     private ItemMasterEntity item;
 
+    @Column(name = "batch_code")
+    private String batchCode;
+
     @Column(name = "hsn_code")
     private String hsnCode;
 

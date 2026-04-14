@@ -59,10 +59,20 @@ public class CustomerMasterServiceImpl implements CustomerMasterService {
     }
 
     @Override
+    public List<CustomerMasterDTO> searchCustomersByNamePrefix(String customerNamePrefix) {
+        return customerMasterRepository.findTop20ByCustomerNameStartingWithIgnoreCaseAndIsDeletedFalse(customerNamePrefix).stream().map(entity -> {
+            CustomerMasterDTO dto = new CustomerMasterDTO();
+            BeanUtils.copyProperties(entity, dto);
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
     public void deleteCustomer(Long customerId) {
         CustomerMasterEntity entity = customerMasterRepository.findById(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + customerId));
         entity.setIsDeleted(true);
         entity.setDeletedAt(LocalDateTime.now());
     }
+
 }

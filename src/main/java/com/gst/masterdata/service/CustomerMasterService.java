@@ -9,5 +9,6 @@ public interface CustomerMasterService {
     CustomerMasterDTO updateCustomer(Long customerId, CustomerMasterDTO customerMasterDTO);
     CustomerMasterDTO getCustomerById(Long customerId);
     List<CustomerMasterDTO> getAllCustomers();
+    List<CustomerMasterDTO> searchCustomersByNamePrefix(String customerNamePrefix);
     void deleteCustomer(Long customerId);
 }

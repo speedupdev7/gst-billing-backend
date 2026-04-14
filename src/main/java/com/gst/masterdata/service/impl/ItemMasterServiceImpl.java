@@ -59,10 +59,20 @@ public class ItemMasterServiceImpl implements ItemMasterService {
     }
 
     @Override
+    public List<ItemMasterDTO> searchItemsByNamePrefix(String itemNamePrefix) {
+        return itemMasterRepository.findTop20ByItemNameStartingWithIgnoreCaseAndIsDeletedFalse(itemNamePrefix).stream().map(entity -> {
+            ItemMasterDTO dto = new ItemMasterDTO();
+            BeanUtils.copyProperties(entity, dto);
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
     public void deleteItem(Long itemId) {
         ItemMasterEntity entity = itemMasterRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
         entity.setIsDeleted(true);
         entity.setDeletedAt(LocalDateTime.now());
     }
+
 }
