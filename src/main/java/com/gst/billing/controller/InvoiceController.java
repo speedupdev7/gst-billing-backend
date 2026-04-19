@@ -3,6 +3,9 @@ package com.gst.billing.controller;
 import com.gst.billing.dto.InvoiceRecordDTO;
 import com.gst.billing.service.InvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -18,6 +21,15 @@ public class InvoiceController {
     @PostMapping
     public InvoiceRecordDTO createInvoice(@RequestBody InvoiceRecordDTO invoiceRecordDTO) {
         return invoiceService.createInvoice(invoiceRecordDTO);
+    }
+
+    @PostMapping("/save-and-print")
+    public ResponseEntity<byte[]> saveAndPrintInvoice(@RequestBody InvoiceRecordDTO invoiceRecordDTO) {
+        byte[] pdfBytes = invoiceService.saveAndPrintInvoice(invoiceRecordDTO);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=invoice.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
     }
 
     @PutMapping("/{invoiceId}")

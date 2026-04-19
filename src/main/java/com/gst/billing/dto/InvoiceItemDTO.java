@@ -23,4 +23,7 @@ public class InvoiceItemDTO {
     private BigDecimal sgstAmt;
     private BigDecimal igstAmt;
     private BigDecimal lineTotal;
+    private String itemName;
+    private String itemCode;
+    private String itemUnit;
 }

@@ -27,6 +27,8 @@ public class InvoiceRecordDTO {
     private BigDecimal roundOff;
     private BigDecimal finalAmount;
     private String transporterName;
+    private String customerName;
+    private String unitName;
     private String vehicleNumber;
     private String narration;
     private List<InvoiceItemDTO> items;

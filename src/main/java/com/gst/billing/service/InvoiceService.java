@@ -7,6 +7,7 @@ import java.util.List;
 public interface InvoiceService {
     InvoiceRecordDTO createInvoice(InvoiceRecordDTO invoiceRecordDTO);
     InvoiceRecordDTO updateInvoice(Long invoiceId, InvoiceRecordDTO invoiceRecordDTO);
+    byte[] saveAndPrintInvoice(InvoiceRecordDTO invoiceRecordDTO);
     InvoiceRecordDTO getInvoiceById(Long invoiceId);
     List<InvoiceRecordDTO> getAllInvoices();
     List<InvoiceRecordDTO> searchInvoicesByNumber(String invoiceNoPrefix);
