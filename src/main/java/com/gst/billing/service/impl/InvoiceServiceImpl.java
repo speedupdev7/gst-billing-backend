@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -62,6 +63,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional
     public InvoiceRecordDTO createInvoice(InvoiceRecordDTO invoiceRecordDTO) {
         validateInvoiceRequest(invoiceRecordDTO);
+        preparePaymentsAndBalance(invoiceRecordDTO);
         InvoiceRecordEntity invoiceRecordEntity = toInvoiceRecordEntity(invoiceRecordDTO);
         InvoiceRecordEntity savedInvoice = invoiceRecordRepository.save(invoiceRecordEntity);
 
@@ -88,6 +90,9 @@ public class InvoiceServiceImpl implements InvoiceService {
     public InvoiceRecordDTO updateInvoice(Long invoiceId, InvoiceRecordDTO invoiceRecordDTO) {
         InvoiceRecordEntity existingInvoice = invoiceRecordRepository.findById(invoiceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with id: " + invoiceId));
+
+        validateInvoiceRequest(invoiceRecordDTO);
+        preparePaymentsAndBalance(invoiceRecordDTO);
 
         InvoiceRecordEntity updatedInvoice = toInvoiceRecordEntity(invoiceRecordDTO);
         updatedInvoice.setInvoiceId(existingInvoice.getInvoiceId());
@@ -222,6 +227,41 @@ public class InvoiceServiceImpl implements InvoiceService {
         return BigDecimal.ZERO;
     }
 
+    private void preparePaymentsAndBalance(InvoiceRecordDTO dto) {
+        if (dto == null) {
+            return;
+        }
+
+        if (dto.getPayments() != null && !dto.getPayments().isEmpty()) {
+            dto.getPayments().forEach(payment -> {
+                if (payment.getPaymentDate() == null) {
+                    payment.setPaymentDate(dto.getInvoiceDate() != null ? dto.getInvoiceDate() : LocalDate.now());
+                }
+            });
+        }
+
+        if (dto.getBalance() == null) {
+            dto.setBalance(new InvoiceBalanceDTO());
+        }
+
+        BigDecimal invoiceAmount = dto.getFinalAmount() != null ? dto.getFinalAmount() : calculateFinalAmount(dto);
+        BigDecimal paidAmount = dto.getPayments() == null ? BigDecimal.ZERO : dto.getPayments().stream()
+                .map(payment -> payment.getAmount() == null ? BigDecimal.ZERO : payment.getAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal balanceAmount = invoiceAmount.subtract(paidAmount);
+        String status = paidAmount.compareTo(invoiceAmount) >= 0 ? "Paid" : paidAmount.compareTo(BigDecimal.ZERO) > 0 ? "Partially Paid" : "Unpaid";
+
+        InvoiceBalanceDTO balance = dto.getBalance();
+        if (balance.getInvoiceAmount() == null) {
+            balance.setInvoiceAmount(invoiceAmount);
+        }
+        balance.setPaidAmount(paidAmount);
+        balance.setBalanceAmount(balanceAmount);
+        if (balance.getStatus() == null || balance.getStatus().isBlank()) {
+            balance.setStatus(status);
+        }
+    }
+
     private InvoiceItemEntity toInvoiceItemEntity(InvoiceRecordEntity invoice, InvoiceItemDTO dto) {
         InvoiceItemEntity entity = new InvoiceItemEntity();
         BeanUtils.copyProperties(dto, entity);
@@ -264,6 +304,9 @@ public class InvoiceServiceImpl implements InvoiceService {
             InvoicePaymentEntity entity = new InvoicePaymentEntity();
             BeanUtils.copyProperties(paymentDTO, entity);
             entity.setInvoice(invoice);
+            if (entity.getPaymentDate() == null) {
+                entity.setPaymentDate(invoice.getInvoiceDate() != null ? invoice.getInvoiceDate() : LocalDate.now());
+            }
             return entity;
         }).collect(Collectors.toList());
         return invoicePaymentRepository.saveAll(entities);
