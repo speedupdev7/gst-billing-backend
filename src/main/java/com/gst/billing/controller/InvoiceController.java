@@ -23,14 +23,14 @@ public class InvoiceController {
         return invoiceService.createInvoice(invoiceRecordDTO);
     }
 
-    /*@PostMapping("/save-and-print")
+    @PostMapping("/save-and-print")
     public ResponseEntity<byte[]> saveAndPrintInvoice(@RequestBody InvoiceRecordDTO invoiceRecordDTO) {
         byte[] pdfBytes = invoiceService.saveAndPrintInvoice(invoiceRecordDTO);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=invoice.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdfBytes);
-    }*/
+    }
 
     @PutMapping("/{invoiceId}")
     public InvoiceRecordDTO updateInvoice(@PathVariable Long invoiceId, @RequestBody InvoiceRecordDTO invoiceRecordDTO) {
@@ -40,6 +40,11 @@ public class InvoiceController {
     @GetMapping("/{invoiceId}")
     public InvoiceRecordDTO getInvoiceById(@PathVariable Long invoiceId) {
         return invoiceService.getInvoiceById(invoiceId);
+    }
+
+    @GetMapping("/search-by-number")
+    public InvoiceRecordDTO getInvoiceByNumber(@RequestParam String invoiceNo) {
+        return invoiceService.getInvoiceByNumber(invoiceNo);
     }
 
     @GetMapping

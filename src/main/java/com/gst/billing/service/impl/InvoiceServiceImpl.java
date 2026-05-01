@@ -20,11 +20,15 @@ import com.gst.masterdata.exceptions.ResourceNotFoundException;
 import com.gst.masterdata.repository.CustomerMasterRepository;
 import com.gst.masterdata.repository.ItemMasterRepository;
 import com.gst.masterdata.repository.UnitMasterRepository;
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -70,6 +74,17 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional
+    public byte[] saveAndPrintInvoice(InvoiceRecordDTO invoiceRecordDTO) {
+        InvoiceRecordDTO savedInvoice = createInvoice(invoiceRecordDTO);
+        try {
+            return buildInvoicePdf(savedInvoice);
+        } catch (IOException ex) {
+            throw new RuntimeException("Failed to generate invoice PDF", ex);
+        }
+    }
+
+    @Override
+    @Transactional
     public InvoiceRecordDTO updateInvoice(Long invoiceId, InvoiceRecordDTO invoiceRecordDTO) {
         InvoiceRecordEntity existingInvoice = invoiceRecordRepository.findById(invoiceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with id: " + invoiceId));
@@ -99,6 +114,22 @@ public class InvoiceServiceImpl implements InvoiceService {
         InvoiceRecordEntity invoiceEntity = invoiceRecordRepository.findById(invoiceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with id: " + invoiceId));
 
+        List<InvoiceItemEntity> items = invoiceItemRepository.findByInvoiceInvoiceIdAndIsDeletedFalse(invoiceId);
+        InvoiceBalanceEntity balance = invoiceBalanceRepository.findByInvoiceInvoiceIdAndIsDeletedFalse(invoiceId).orElse(null);
+        List<InvoicePaymentEntity> payments = invoicePaymentRepository.findByInvoiceInvoiceIdAndIsDeletedFalse(invoiceId);
+
+        return toInvoiceRecordDTO(invoiceEntity, items, balance, payments);
+    }
+
+    @Override
+    public InvoiceRecordDTO getInvoiceByNumber(String invoiceNo) {
+        if (invoiceNo == null || invoiceNo.trim().isEmpty()) {
+            throw new IllegalArgumentException("invoiceNo is required");
+        }
+        InvoiceRecordEntity invoiceEntity = invoiceRecordRepository.findByInvoiceNoAndIsDeletedFalse(invoiceNo.trim())
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with invoiceNo: " + invoiceNo));
+
+        Long invoiceId = invoiceEntity.getInvoiceId();
         List<InvoiceItemEntity> items = invoiceItemRepository.findByInvoiceInvoiceIdAndIsDeletedFalse(invoiceId);
         InvoiceBalanceEntity balance = invoiceBalanceRepository.findByInvoiceInvoiceIdAndIsDeletedFalse(invoiceId).orElse(null);
         List<InvoicePaymentEntity> payments = invoicePaymentRepository.findByInvoiceInvoiceIdAndIsDeletedFalse(invoiceId);
@@ -172,7 +203,23 @@ public class InvoiceServiceImpl implements InvoiceService {
             entity.setUnit(unit);
         }
 
+        if (dto.getFinalAmount() == null) {
+            entity.setFinalAmount(calculateFinalAmount(dto));
+        }
+
         return entity;
+    }
+
+    private BigDecimal calculateFinalAmount(InvoiceRecordDTO dto) {
+        if (dto.getBalance() != null && dto.getBalance().getInvoiceAmount() != null) {
+            return dto.getBalance().getInvoiceAmount();
+        }
+        if (dto.getItems() != null && !dto.getItems().isEmpty()) {
+            return dto.getItems().stream()
+                    .map(item -> item.getLineTotal() == null ? BigDecimal.ZERO : item.getLineTotal())
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+        return BigDecimal.ZERO;
     }
 
     private InvoiceItemEntity toInvoiceItemEntity(InvoiceRecordEntity invoice, InvoiceItemDTO dto) {
@@ -257,9 +304,11 @@ public class InvoiceServiceImpl implements InvoiceService {
         dto.setPayments(payments == null ? Collections.emptyList() : payments.stream().map(this::toInvoicePaymentDTO).collect(Collectors.toList()));
         if (entity.getCustomer() != null) {
             dto.setCustomerId(entity.getCustomer().getCustomerId());
+            dto.setCustomerName(entity.getCustomer().getCustomerName());
         }
         if (entity.getUnit() != null) {
             dto.setUnitId(entity.getUnit().getUnitId());
+            dto.setUnitName(entity.getUnit().getUnitName());
         }
         return dto;
     }
@@ -283,5 +332,105 @@ public class InvoiceServiceImpl implements InvoiceService {
         InvoicePaymentDTO dto = new InvoicePaymentDTO();
         BeanUtils.copyProperties(entity, dto);
         return dto;
+    }
+
+    private byte[] buildInvoicePdf(InvoiceRecordDTO invoice) throws IOException {
+        String html = buildInvoiceHtml(invoice);
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            PdfRendererBuilder builder = new PdfRendererBuilder();
+            builder.withHtmlContent(html, null);
+            builder.toStream(outputStream);
+            builder.run();
+            return outputStream.toByteArray();
+        }
+    }
+
+    private String buildInvoiceHtml(InvoiceRecordDTO invoice) {
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html>");
+        html.append("<html><head><meta charset='UTF-8'/>");
+        html.append("<style>");
+        html.append("body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; }");
+        html.append(".header { background: linear-gradient(90deg, #1f497d, #4f81bd); color: white; padding: 20px; }");
+        html.append(".header h1 { margin: 0; font-size: 28px; }");
+        html.append(".subheader { margin-top: 6px; font-size: 12px; color: #f2f2f2; }");
+        html.append(".section { padding: 16px; }");
+        html.append(".box { border: 1px solid #ddd; padding: 14px; margin-bottom: 12px; border-radius: 8px; }");
+        html.append(".row { display: flex; justify-content: space-between; }");
+        html.append(".col { width: 48%; }");
+        html.append("table { width: 100%; border-collapse: collapse; margin-top: 10px; }");
+        html.append("th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }");
+        html.append("th { background: #f0f4fb; }");
+        html.append(".totals td { border: none; padding: 4px 8px; }");
+        html.append(".totals .label { text-align: right; font-weight: bold; }");
+        html.append(".totals .value { text-align: right; width: 120px; }");
+        html.append(".footer { margin-top: 24px; padding: 12px; background: #f9f9f9; border-radius: 8px; font-size: 12px; }");
+        html.append("</style>");
+        html.append("</head><body>");
+
+        html.append("<div class='header'><h1>Tax Invoice</h1><div class='subheader'>Generated by GST Billing</div></div>");
+
+        html.append("<div class='section'><div class='box row'>");
+        html.append("<div class='col'><strong>Invoice Details</strong><br/>");
+        html.append("Invoice No: " + safe(invoice.getInvoiceNo()) + "<br/>");
+        html.append("Invoice Date: " + safe(invoice.getInvoiceDate()) + "<br/>");
+        html.append("Place of Supply: " + safe(invoice.getPlaceOfSupply()) + "<br/>");
+        html.append("State Code: " + safe(invoice.getStateCode()) + "<br/>");
+        html.append("Reverse Charge: " + (Boolean.TRUE.equals(invoice.getReverseCharge()) ? "Yes" : "No") + "<br/>");
+        html.append("</div>");
+
+        html.append("<div class='col'><strong>Customer Details</strong><br/>");
+        html.append("Customer ID: " + safe(invoice.getCustomerId()) + "<br/>");
+        html.append("Customer Name: " + safe(invoice.getCustomerName()) + "<br/>");
+        html.append("Unit: " + safe(invoice.getUnitName()) + "<br/>");
+        html.append("Transporter: " + safe(invoice.getTransporterName()) + "<br/>");
+        html.append("Narration: " + safe(invoice.getNarration()) + "<br/>");
+        html.append("</div>");
+        html.append("</div></div>");
+
+        html.append("<div class='section'><div class='box'><strong>Items</strong>");
+        html.append("<table><thead><tr><th>#</th><th>Description</th><th>HSN</th><th>Qty</th><th>Rate</th><th>GST%</th><th>Total</th></tr></thead><tbody>");
+        int index = 1;
+        for (InvoiceItemDTO item : invoice.getItems()) {
+            html.append("<tr>");
+            html.append("<td>" + index++ + "</td>");
+            html.append("<td>" + safe(item.getItemName()) + " (" + safe(item.getItemCode()) + ")</td>");
+            html.append("<td>" + safe(item.getHsnCode()) + "</td>");
+            html.append("<td>" + safe(item.getQuantity()) + "</td>");
+            html.append("<td>" + safe(item.getRate()) + "</td>");
+            html.append("<td>" + safe(item.getGstRate()) + "%</td>");
+            html.append("<td>" + safe(item.getLineTotal()) + "</td>");
+            html.append("</tr>");
+        }
+        html.append("</tbody></table></div></div>");
+
+        html.append("<div class='section'><div class='box'><table class='totals'>");
+        html.append("<tr><td class='label'>Total Gross</td><td class='value'>" + safe(invoice.getTotalGrossAmount()) + "</td></tr>");
+        html.append("<tr><td class='label'>Total Discount</td><td class='value'>" + safe(invoice.getTotalDiscount()) + "</td></tr>");
+        html.append("<tr><td class='label'>Taxable Amount</td><td class='value'>" + safe(invoice.getTaxableAmount()) + "</td></tr>");
+        html.append("<tr><td class='label'>CGST</td><td class='value'>" + safe(invoice.getTotalCgst()) + "</td></tr>");
+        html.append("<tr><td class='label'>SGST</td><td class='value'>" + safe(invoice.getTotalSgst()) + "</td></tr>");
+        html.append("<tr><td class='label'>IGST</td><td class='value'>" + safe(invoice.getTotalIgst()) + "</td></tr>");
+        html.append("<tr><td class='label'>Round Off</td><td class='value'>" + safe(invoice.getRoundOff()) + "</td></tr>");
+        html.append("<tr><td class='label'>Final Amount</td><td class='value'><strong>" + safe(invoice.getFinalAmount()) + "</strong></td></tr>");
+        html.append("</table></div></div>");
+
+        if (invoice.getBalance() != null) {
+            html.append("<div class='section'><div class='box'><strong>Balance</strong><br/>");
+            html.append("Amount: " + safe(invoice.getBalance().getInvoiceAmount()) + "<br/>");
+            html.append("Paid: " + safe(invoice.getBalance().getPaidAmount()) + "<br/>");
+            html.append("Due: " + safe(invoice.getBalance().getBalanceAmount()) + "<br/>");
+            html.append("Status: " + safe(invoice.getBalance().getStatus()) + "<br/>");
+            html.append("Due Date: " + safe(invoice.getBalance().getDueDate()) + "<br/>");
+            html.append("</div></div>");
+        }
+
+        html.append("<div class='footer'>This is a generated GST invoice. Please verify all details before accepting.</div>");
+        html.append("</body></html>");
+        return html.toString();
+    }
+
+    private String safe(Object value) {
+        return value == null ? "" : value.toString();
     }
 }
