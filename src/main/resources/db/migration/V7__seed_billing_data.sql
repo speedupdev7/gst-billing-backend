@@ -29,18 +29,22 @@ select setval(pg_get_serial_sequence('unit_master','unit_id'), (select coalesce(
 -- ======================
 -- 2. ITEMS (item_master)
 -- ======================
-insert into item_master (item_code, item_name, hsn_code, unit, gst_rate, purchase_price, sale_price, mrp, opening_stock, is_active)
+-- Add batch_code column if not exists
+alter table item_master
+add column if not exists batch_code varchar(100);
+
+insert into item_master (item_code, item_name, hsn_code, unit, gst_rate, purchase_price, sale_price, mrp, opening_stock, batch_code, is_active)
 values
-('ITM-1001', 'Plain T-Shirt', '6109', 'PCS', 18.00, 199.00, 299.00, 349.00, 100, true),
-('ITM-1002', 'Formal Shirt', '6205', 'PCS', 12.00, 599.00, 799.00, 899.00, 75, true),
-('ITM-1003', 'Jeans', '6203', 'PCS', 18.00, 999.00, 1299.00, 1499.00, 50, true),
-('ITM-1004', 'Laptop Model A', '8471', 'PCS', 18.00, 38999.00, 45999.00, 49999.00, 25, true),
-('ITM-1005', 'USB Cable', '8544', 'PCS', 18.00, 149.00, 199.00, 249.00, 200, true),
-('ITM-1006', 'Office Chair', '9401', 'PCS', 18.00, 4999.00, 5999.00, 6999.00, 30, true),
-('ITM-1007', 'Notebook 200pg', '4820', 'PCS', 12.00, 39.00, 49.00, 59.00, 150, true),
-('ITM-1008', 'Pen Pack', '9608', 'PCS', 12.00, 79.00, 99.00, 119.00, 120, true),
-('ITM-1009', 'LED Bulb 9W', '8539', 'PCS', 18.00, 199.00, 249.00, 299.00, 80, true),
-('ITM-1010', 'Coffee Mug', '6912', 'PCS', 18.00, 119.00, 149.00, 179.00, 90, true)
+('ITM-1001', 'Plain T-Shirt', '6109', 'PCS', 18.00, 199.00, 299.00, 349.00, 100, 'BATCH01', true),
+('ITM-1002', 'Formal Shirt', '6205', 'PCS', 12.00, 599.00, 799.00, 899.00, 75, 'BATCH02', true),
+('ITM-1003', 'Jeans', '6203', 'PCS', 18.00, 999.00, 1299.00, 1499.00, 50, 'BATCH03', true),
+('ITM-1004', 'Laptop Model A', '8471', 'PCS', 18.00, 38999.00, 45999.00, 49999.00, 25, 'BATCH04', true),
+('ITM-1005', 'USB Cable', '8544', 'PCS', 18.00, 149.00, 199.00, 249.00, 200, 'BATCH05', true),
+('ITM-1006', 'Office Chair', '9401', 'PCS', 18.00, 4999.00, 5999.00, 6999.00, 30, 'BATCH06', true),
+('ITM-1007', 'Notebook 200pg', '4820', 'PCS', 12.00, 39.00, 49.00, 59.00, 150, 'BATCH07', true),
+('ITM-1008', 'Pen Pack', '9608', 'PCS', 12.00, 79.00, 99.00, 119.00, 120, 'BATCH08', true),
+('ITM-1009', 'LED Bulb 9W', '8539', 'PCS', 18.00, 199.00, 249.00, 299.00, 80, 'BATCH09', true),
+('ITM-1010', 'Coffee Mug', '6912', 'PCS', 18.00, 119.00, 149.00, 179.00, 90, 'BATCH10', true)
 ON CONFLICT DO NOTHING;
 
 select setval(pg_get_serial_sequence('item_master','item_id'), (select coalesce(max(item_id),0) from item_master));

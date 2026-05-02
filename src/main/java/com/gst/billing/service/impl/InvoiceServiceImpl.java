@@ -187,8 +187,14 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (invoiceRecordDTO == null) {
             throw new IllegalArgumentException("Invoice request cannot be null");
         }
+        if (invoiceRecordDTO.getCustomerId() == null) {
+            throw new IllegalArgumentException("Customer ID is required");
+        }
         if (invoiceRecordDTO.getItems() == null || invoiceRecordDTO.getItems().isEmpty()) {
             throw new IllegalArgumentException("Invoice must contain at least one item");
+        }
+        if (invoiceRecordDTO.getPayments() == null || invoiceRecordDTO.getPayments().isEmpty()) {
+            throw new IllegalArgumentException("Payments array cannot be null or empty");
         }
     }
 
@@ -271,6 +277,9 @@ public class InvoiceServiceImpl implements InvoiceService {
             ItemMasterEntity item = itemMasterRepository.findById(dto.getItemId())
                     .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + dto.getItemId()));
             entity.setItem(item);
+            if (entity.getBatchCode() == null || entity.getBatchCode().isBlank()) {
+                entity.setBatchCode(item.getBatchCode());
+            }
         }
 
         return entity;
@@ -361,6 +370,15 @@ public class InvoiceServiceImpl implements InvoiceService {
         BeanUtils.copyProperties(entity, dto);
         if (entity.getItem() != null) {
             dto.setItemId(entity.getItem().getItemId());
+            dto.setItemName(entity.getItem().getItemName());
+            dto.setItemCode(entity.getItem().getItemCode());
+            dto.setItemUnit(entity.getItem().getUnit());
+            if (dto.getHsnCode() == null || dto.getHsnCode().isBlank()) {
+                dto.setHsnCode(entity.getItem().getHsnCode());
+            }
+            if (dto.getGstRate() == null) {
+                dto.setGstRate(entity.getItem().getGstRate());
+            }
         }
         return dto;
     }

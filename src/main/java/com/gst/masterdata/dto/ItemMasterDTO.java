@@ -19,4 +19,5 @@ public class ItemMasterDTO {
     private BigDecimal salePrice;
     private BigDecimal mrp;
     private Integer openingStock;
+    private String batchCode;
 }

@@ -26,6 +26,7 @@ public class ItemMasterServiceImpl implements ItemMasterService {
         ItemMasterEntity savedEntity = itemMasterRepository.save(entity);
         ItemMasterDTO responseDTO = new ItemMasterDTO();
         BeanUtils.copyProperties(savedEntity, responseDTO);
+        responseDTO.setBatchCode(savedEntity.getBatchCode());
         return responseDTO;
     }
 
@@ -37,6 +38,7 @@ public class ItemMasterServiceImpl implements ItemMasterService {
         ItemMasterEntity updatedEntity = itemMasterRepository.save(entity);
         ItemMasterDTO responseDTO = new ItemMasterDTO();
         BeanUtils.copyProperties(updatedEntity, responseDTO);
+        responseDTO.setBatchCode(updatedEntity.getBatchCode());
         return responseDTO;
     }
 
@@ -46,6 +48,7 @@ public class ItemMasterServiceImpl implements ItemMasterService {
                 .orElseThrow(() -> new RuntimeException("Item not found"));
         ItemMasterDTO responseDTO = new ItemMasterDTO();
         BeanUtils.copyProperties(entity, responseDTO);
+        responseDTO.setBatchCode(entity.getBatchCode());
         return responseDTO;
     }
 
@@ -54,6 +57,7 @@ public class ItemMasterServiceImpl implements ItemMasterService {
         return itemMasterRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "itemId")).stream().map(entity -> {
             ItemMasterDTO dto = new ItemMasterDTO();
             BeanUtils.copyProperties(entity, dto);
+            dto.setBatchCode(entity.getBatchCode());
             return dto;
         }).collect(Collectors.toList());
     }
@@ -63,6 +67,7 @@ public class ItemMasterServiceImpl implements ItemMasterService {
         return itemMasterRepository.findTop20ByItemNameStartingWithIgnoreCaseAndIsDeletedFalse(itemNamePrefix).stream().map(entity -> {
             ItemMasterDTO dto = new ItemMasterDTO();
             BeanUtils.copyProperties(entity, dto);
+            dto.setBatchCode(entity.getBatchCode());
             return dto;
         }).collect(Collectors.toList());
     }

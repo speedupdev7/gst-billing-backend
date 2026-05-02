@@ -46,4 +46,7 @@ public class ItemMasterEntity extends BaseMasterEntity {
 
     @Column(name = "opening_stock")
     private Integer openingStock;
+
+    @Column(name = "batch_code")
+    private String batchCode;
 }
