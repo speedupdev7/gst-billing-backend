@@ -193,6 +193,12 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (invoiceRecordDTO.getItems() == null || invoiceRecordDTO.getItems().isEmpty()) {
             throw new IllegalArgumentException("Invoice must contain at least one item");
         }
+        long validItemsCount = invoiceRecordDTO.getItems().stream()
+                .filter(item -> item.getItemId() != null && item.getQuantity() != null && item.getQuantity().compareTo(BigDecimal.ZERO) > 0)
+                .count();
+        if (validItemsCount == 0) {
+            throw new IllegalArgumentException("Invoice must contain at least one valid item with itemId and positive quantity");
+        }
         if (invoiceRecordDTO.getPayments() == null || invoiceRecordDTO.getPayments().isEmpty()) {
             throw new IllegalArgumentException("Payments array cannot be null or empty");
         }
@@ -290,6 +296,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             return Collections.emptyList();
         }
         List<InvoiceItemEntity> entities = items.stream()
+                .filter(item -> item.getItemId() != null && item.getQuantity() != null && item.getQuantity().compareTo(BigDecimal.ZERO) > 0)
                 .map(item -> toInvoiceItemEntity(invoice, item))
                 .collect(Collectors.toList());
         return invoiceItemRepository.saveAll(entities);
