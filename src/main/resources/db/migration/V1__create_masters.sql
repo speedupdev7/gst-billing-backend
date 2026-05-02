@@ -26,6 +26,24 @@ create table if not exists role_master (
 );
 
 -- =======================
+-- 1.1 DEPARTMENT MASTER
+-- =======================
+create table if not exists department_master (
+    department_id         bigserial primary key,
+    department_code       varchar(20) not null unique,
+    department_name       varchar(100) not null,
+    description           text,
+    is_system_department  boolean default false,
+    is_active             boolean default true,
+
+    is_deleted            boolean default false,
+    deleted_at            timestamp,
+
+    created_at            timestamp default current_timestamp,
+    updated_at            timestamp default current_timestamp
+);
+
+-- =======================
 -- 2. DESIGNATION MASTER
 -- =======================
 create table if not exists designation_master (
@@ -164,6 +182,10 @@ create index if not exists idx_role_active_not_deleted
     on role_master (is_active)
     where is_deleted = false;
 
+create index if not exists idx_department_active_not_deleted
+    on department_master (is_active)
+    where is_deleted = false;
+
 create index if not exists idx_designation_active_not_deleted
     on designation_master (is_active)
     where is_deleted = false;
@@ -202,6 +224,14 @@ $$ language plpgsql;
 -- =======================
 create trigger trg_role_master_updated_at
 before update on role_master
+for each row
+execute function fn_set_updated_at();
+
+-- =======================
+-- DEPARTMENT MASTER TRIGGER
+-- =======================
+create trigger trg_department_master_updated_at
+before update on department_master
 for each row
 execute function fn_set_updated_at();
 
