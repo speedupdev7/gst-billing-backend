@@ -1,7 +1,11 @@
 package com.gst.billing.service;
 
+import com.gst.billing.dto.InvoiceBalanceDetailDTO;
 import com.gst.billing.dto.InvoiceRecordDTO;
+import com.gst.billing.dto.PagedResponse;
+import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface InvoiceService {
@@ -13,4 +17,8 @@ public interface InvoiceService {
     List<InvoiceRecordDTO> getAllInvoices();
     List<InvoiceRecordDTO> searchInvoicesByNumber(String invoiceNoPrefix);
     void deleteInvoice(Long invoiceId);
+    List<InvoiceBalanceDetailDTO> getAllInvoiceBalances();
+    List<InvoiceBalanceDetailDTO> getInvoicesByDateRange(LocalDate startDate, LocalDate endDate);
+    PagedResponse<InvoiceBalanceDetailDTO> getAllInvoiceBalancesPageable(Pageable pageable);
+    PagedResponse<InvoiceBalanceDetailDTO> getInvoicesByDateRangePageable(LocalDate startDate, LocalDate endDate, Pageable pageable);
 }

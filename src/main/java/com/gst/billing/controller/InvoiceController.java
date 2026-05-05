@@ -1,13 +1,19 @@
 package com.gst.billing.controller;
 
+import com.gst.billing.dto.InvoiceBalanceDetailDTO;
 import com.gst.billing.dto.InvoiceRecordDTO;
+import com.gst.billing.dto.PagedResponse;
 import com.gst.billing.service.InvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -58,5 +64,31 @@ public class InvoiceController {
     @DeleteMapping("/{invoiceId}")
     public void deleteInvoice(@PathVariable Long invoiceId) {
         invoiceService.deleteInvoice(invoiceId);
+    }
+
+    @GetMapping("/balance/all")
+    public List<InvoiceBalanceDetailDTO> getAllInvoiceBalances() {
+        return invoiceService.getAllInvoiceBalances();
+    }
+
+    @GetMapping("/balance/date-range")
+    public List<InvoiceBalanceDetailDTO> getInvoicesByDateRange(
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate) {
+        return invoiceService.getInvoicesByDateRange(startDate, endDate);
+    }
+
+    @GetMapping("/balance/all-paginated")
+    public PagedResponse<InvoiceBalanceDetailDTO> getAllInvoiceBalancesPaginated(
+            @PageableDefault(size = 20, page = 0, sort = "invoice.invoiceDate", direction = Sort.Direction.DESC) Pageable pageable) {
+        return invoiceService.getAllInvoiceBalancesPageable(pageable);
+    }
+
+    @GetMapping("/balance/date-range-paginated")
+    public PagedResponse<InvoiceBalanceDetailDTO> getInvoicesByDateRangePaginated(
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate,
+            @PageableDefault(size = 20, page = 0, sort = "invoice.invoiceDate", direction = Sort.Direction.DESC) Pageable pageable) {
+        return invoiceService.getInvoicesByDateRangePageable(startDate, endDate, pageable);
     }
 }

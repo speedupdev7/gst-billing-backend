@@ -1,9 +1,11 @@
 package com.gst.billing.service.impl;
 
 import com.gst.billing.dto.InvoiceBalanceDTO;
+import com.gst.billing.dto.InvoiceBalanceDetailDTO;
 import com.gst.billing.dto.InvoiceItemDTO;
 import com.gst.billing.dto.InvoicePaymentDTO;
 import com.gst.billing.dto.InvoiceRecordDTO;
+import com.gst.billing.dto.PagedResponse;
 import com.gst.billing.entity.InvoiceBalanceEntity;
 import com.gst.billing.entity.InvoiceItemEntity;
 import com.gst.billing.entity.InvoicePaymentEntity;
@@ -23,6 +25,10 @@ import com.gst.masterdata.repository.UnitMasterRepository;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -181,6 +187,77 @@ public class InvoiceServiceImpl implements InvoiceService {
         softDeleteInvoiceItems(invoiceId);
         softDeleteInvoicePayments(invoiceId);
         softDeleteInvoiceBalance(invoiceId);
+    }
+
+    @Override
+    public List<InvoiceBalanceDetailDTO> getAllInvoiceBalances() {
+        return invoiceBalanceRepository.findAllInvoiceBalances().stream()
+                .map(this::toInvoiceBalanceDetailDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<InvoiceBalanceDetailDTO> getInvoicesByDateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("Start date and end date are required");
+        }
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Start date cannot be after end date");
+        }
+        return invoiceBalanceRepository.findInvoicesByDateRange(startDate, endDate).stream()
+                .map(this::toInvoiceBalanceDetailDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PagedResponse<InvoiceBalanceDetailDTO> getAllInvoiceBalancesPageable(Pageable pageable) {
+        Pageable normalized = normalizeInvoiceBalanceSort(pageable);
+        return toPagedResponse(invoiceBalanceRepository.findAllInvoiceBalancesPageable(normalized));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PagedResponse<InvoiceBalanceDetailDTO> getInvoicesByDateRangePageable(LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("Start date and end date are required");
+        }
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Start date cannot be after end date");
+        }
+        Pageable normalized = normalizeInvoiceBalanceSort(pageable);
+        return toPagedResponse(invoiceBalanceRepository.findInvoicesByDateRangePageable(startDate, endDate, normalized));
+    }
+
+    private PagedResponse<InvoiceBalanceDetailDTO> toPagedResponse(Page<InvoiceBalanceEntity> page) {
+        return new PagedResponse<>(
+                page.map(this::toInvoiceBalanceDetailDTO).getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isLast(),
+                page.isFirst(),
+                page.getNumberOfElements(),
+                page.isEmpty()
+        );
+    }
+
+    private Pageable normalizeInvoiceBalanceSort(Pageable pageable) {
+        if (pageable == null || pageable.getSort().isUnsorted()) {
+            return pageable;
+        }
+        List<Sort.Order> normalizedOrders = pageable.getSort().stream()
+                .map(order -> {
+                    String property = order.getProperty();
+                    if ("invoiceDate".equals(property)) {
+                        return new Sort.Order(order.getDirection(), "invoice.invoiceDate");
+                    }
+                    return order;
+                })
+                .toList();
+        Sort normalizedSort = Sort.by(normalizedOrders);
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), normalizedSort);
     }
 
     private void validateInvoiceRequest(InvoiceRecordDTO invoiceRecordDTO) {
@@ -393,6 +470,24 @@ public class InvoiceServiceImpl implements InvoiceService {
     private InvoiceBalanceDTO toInvoiceBalanceDTO(InvoiceBalanceEntity entity) {
         InvoiceBalanceDTO dto = new InvoiceBalanceDTO();
         BeanUtils.copyProperties(entity, dto);
+        return dto;
+    }
+
+    private InvoiceBalanceDetailDTO toInvoiceBalanceDetailDTO(InvoiceBalanceEntity entity) {
+        InvoiceBalanceDetailDTO dto = new InvoiceBalanceDetailDTO();
+        dto.setBalanceId(entity.getBalanceId());
+        dto.setInvoiceAmount(entity.getInvoiceAmount());
+        dto.setStatus(entity.getStatus());
+
+        if (entity.getInvoice() != null) {
+            dto.setInvoiceNo(entity.getInvoice().getInvoiceNo());
+            dto.setInvoiceDate(entity.getInvoice().getInvoiceDate());
+
+            if (entity.getInvoice().getUnit() != null) {
+                dto.setUnitName(entity.getInvoice().getUnit().getUnitName());
+            }
+        }
+
         return dto;
     }
 
