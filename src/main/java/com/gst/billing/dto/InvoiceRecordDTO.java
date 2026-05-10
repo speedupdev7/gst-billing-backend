@@ -34,4 +34,10 @@ public class InvoiceRecordDTO {
     private List<InvoiceItemDTO> items;
     private InvoiceBalanceDTO balance;
     private List<InvoicePaymentDTO> payments;
+    private BigDecimal totalReturnAmount;
+    private BigDecimal totalReturnCgst;
+    private BigDecimal totalReturnSgst;
+    private BigDecimal totalReturnIgst;
+    private BigDecimal totalReturnTaxableAmount;
+    private List<InvoiceReturnDTO> returns;
 }

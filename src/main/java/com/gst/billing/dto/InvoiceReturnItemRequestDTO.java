@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-public class InvoiceItemDTO {
+public class InvoiceReturnItemRequestDTO {
     private Long invoiceItemId;
     private Long itemId;
     private String batchCode;
@@ -23,9 +23,4 @@ public class InvoiceItemDTO {
     private BigDecimal sgstAmt;
     private BigDecimal igstAmt;
     private BigDecimal lineTotal;
-    private BigDecimal returnedQuantity;
-    private BigDecimal availableQuantity;
-    private String itemName;
-    private String itemCode;
-    private String itemUnit;
 }

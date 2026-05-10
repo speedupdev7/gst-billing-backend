@@ -5,15 +5,23 @@ import com.gst.billing.dto.InvoiceBalanceDetailDTO;
 import com.gst.billing.dto.InvoiceItemDTO;
 import com.gst.billing.dto.InvoicePaymentDTO;
 import com.gst.billing.dto.InvoiceRecordDTO;
+import com.gst.billing.dto.InvoiceReturnDTO;
+import com.gst.billing.dto.InvoiceReturnItemDTO;
+import com.gst.billing.dto.InvoiceReturnItemRequestDTO;
+import com.gst.billing.dto.InvoiceReturnRequestDTO;
 import com.gst.billing.dto.PagedResponse;
 import com.gst.billing.entity.InvoiceBalanceEntity;
 import com.gst.billing.entity.InvoiceItemEntity;
 import com.gst.billing.entity.InvoicePaymentEntity;
 import com.gst.billing.entity.InvoiceRecordEntity;
+import com.gst.billing.entity.InvoiceReturnEntity;
+import com.gst.billing.entity.InvoiceReturnItemEntity;
 import com.gst.billing.repository.InvoiceBalanceRepository;
 import com.gst.billing.repository.InvoiceItemRepository;
 import com.gst.billing.repository.InvoicePaymentRepository;
 import com.gst.billing.repository.InvoiceRecordRepository;
+import com.gst.billing.repository.InvoiceReturnItemRepository;
+import com.gst.billing.repository.InvoiceReturnRepository;
 import com.gst.billing.service.InvoiceService;
 import com.gst.masterdata.entity.CustomerMasterEntity;
 import com.gst.masterdata.entity.ItemMasterEntity;
@@ -55,6 +63,12 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Autowired
     private InvoiceBalanceRepository invoiceBalanceRepository;
+
+    @Autowired
+    private InvoiceReturnRepository invoiceReturnRepository;
+
+    @Autowired
+    private InvoiceReturnItemRepository invoiceReturnItemRepository;
 
     @Autowired
     private CustomerMasterRepository customerMasterRepository;
@@ -146,6 +160,73 @@ public class InvoiceServiceImpl implements InvoiceService {
         List<InvoicePaymentEntity> payments = invoicePaymentRepository.findByInvoiceInvoiceIdAndIsDeletedFalse(invoiceId);
 
         return toInvoiceRecordDTO(invoiceEntity, items, balance, payments);
+    }
+
+    @Override
+    @Transactional
+    public InvoiceReturnDTO createInvoiceReturn(String invoiceNo, InvoiceReturnRequestDTO returnRequest) {
+        if (invoiceNo == null || invoiceNo.trim().isEmpty()) {
+            throw new IllegalArgumentException("invoiceNo is required");
+        }
+        if (returnRequest == null || returnRequest.getItems() == null || returnRequest.getItems().isEmpty()) {
+            throw new IllegalArgumentException("Return request must contain at least one item");
+        }
+
+        InvoiceRecordEntity invoiceEntity = invoiceRecordRepository.findByInvoiceNoAndIsDeletedFalse(invoiceNo.trim())
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with invoiceNo: " + invoiceNo));
+
+        Long invoiceId = invoiceEntity.getInvoiceId();
+        List<InvoiceItemEntity> invoiceItems = invoiceItemRepository.findByInvoiceInvoiceIdAndIsDeletedFalse(invoiceId);
+        if (invoiceItems.isEmpty()) {
+            throw new IllegalStateException("Invoice has no items available for return");
+        }
+
+        var invoiceItemMap = invoiceItems.stream()
+                .collect(java.util.stream.Collectors.toMap(InvoiceItemEntity::getInvoiceItemId, item -> item));
+
+        var existingReturnQuantities = invoiceReturnItemRepository.findByInvoiceReturnInvoiceInvoiceIdAndIsDeletedFalse(invoiceId)
+                .stream()
+                .collect(java.util.stream.Collectors.groupingBy(item -> item.getInvoiceItem().getInvoiceItemId(),
+                        java.util.stream.Collectors.reducing(BigDecimal.ZERO, item -> safe(item.getQuantity()), BigDecimal::add)));
+
+        InvoiceReturnEntity returnEntity = toInvoiceReturnEntity(invoiceEntity, returnRequest);
+        InvoiceReturnEntity savedReturn = invoiceReturnRepository.save(returnEntity);
+
+        List<InvoiceReturnItemEntity> savedReturnItems = returnRequest.getItems().stream()
+                .map(requestItem -> {
+                    InvoiceItemEntity original = invoiceItemMap.get(requestItem.getInvoiceItemId());
+                    if (original == null) {
+                        throw new ResourceNotFoundException("Invoice item not found with id: " + requestItem.getInvoiceItemId());
+                    }
+
+                    BigDecimal returnedQuantity = existingReturnQuantities.getOrDefault(original.getInvoiceItemId(), BigDecimal.ZERO);
+                    BigDecimal requestQuantity = safe(requestItem.getQuantity());
+                    BigDecimal availableQuantity = safe(original.getQuantity()).subtract(returnedQuantity);
+                    if (requestQuantity.compareTo(BigDecimal.ZERO) <= 0) {
+                        throw new IllegalArgumentException("Return quantity must be greater than zero");
+                    }
+                    if (requestQuantity.compareTo(availableQuantity) > 0) {
+                        throw new IllegalArgumentException("Return quantity for item " + original.getInvoiceItemId() + " exceeds available quantity");
+                    }
+                    return toInvoiceReturnItemEntity(savedReturn, original, requestItem);
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        savedReturnItems = invoiceReturnItemRepository.saveAll(savedReturnItems);
+        return toInvoiceReturnDTO(savedReturn);
+    }
+
+    @Override
+    public List<InvoiceReturnDTO> getInvoiceReturnsByInvoiceNumber(String invoiceNo) {
+        if (invoiceNo == null || invoiceNo.trim().isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        InvoiceRecordEntity invoiceEntity = invoiceRecordRepository.findByInvoiceNoAndIsDeletedFalse(invoiceNo.trim())
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with invoiceNo: " + invoiceNo));
+        return invoiceReturnRepository.findByInvoiceInvoiceIdAndIsDeletedFalse(invoiceEntity.getInvoiceId())
+                .stream()
+                .map(this::toInvoiceReturnDTO)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @Override
@@ -446,7 +527,168 @@ public class InvoiceServiceImpl implements InvoiceService {
             dto.setUnitId(entity.getUnit().getUnitId());
             dto.setUnitName(entity.getUnit().getUnitName());
         }
+
+        if (entity.getInvoiceId() != null) {
+            List<InvoiceReturnEntity> returns = invoiceReturnRepository.findByInvoiceInvoiceIdAndIsDeletedFalse(entity.getInvoiceId());
+            List<InvoiceReturnItemEntity> returnItems = invoiceReturnItemRepository.findByInvoiceReturnInvoiceInvoiceIdAndIsDeletedFalse(entity.getInvoiceId());
+
+            if (!returns.isEmpty()) {
+                dto.setReturns(returns.stream().map(this::toInvoiceReturnDTO).collect(Collectors.toList()));
+                dto.setTotalReturnAmount(returns.stream()
+                        .map(returnEntity -> safe(returnEntity.getFinalAmount()))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
+                dto.setTotalReturnCgst(returns.stream()
+                        .map(returnEntity -> safe(returnEntity.getTotalCgst()))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
+                dto.setTotalReturnSgst(returns.stream()
+                        .map(returnEntity -> safe(returnEntity.getTotalSgst()))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
+                dto.setTotalReturnIgst(returns.stream()
+                        .map(returnEntity -> safe(returnEntity.getTotalIgst()))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
+                dto.setTotalReturnTaxableAmount(returns.stream()
+                        .map(returnEntity -> safe(returnEntity.getTaxableAmount()))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
+            } else {
+                dto.setReturns(Collections.emptyList());
+            }
+
+            var returnedQuantities = returnItems.stream()
+                    .collect(Collectors.groupingBy(item -> item.getInvoiceItem().getInvoiceItemId(),
+                            Collectors.reducing(BigDecimal.ZERO, item -> safe(item.getQuantity()), BigDecimal::add)));
+
+            if (dto.getItems() != null) {
+                dto.getItems().forEach(item -> {
+                    BigDecimal returnedQuantity = returnedQuantities.getOrDefault(item.getInvoiceItemId(), BigDecimal.ZERO);
+                    item.setReturnedQuantity(returnedQuantity);
+                    if (item.getQuantity() != null) {
+                        item.setAvailableQuantity(item.getQuantity().subtract(returnedQuantity));
+                    }
+                });
+            }
+        }
+
         return dto;
+    }
+
+    private InvoiceReturnDTO toInvoiceReturnDTO(InvoiceReturnEntity entity) {
+        InvoiceReturnDTO dto = new InvoiceReturnDTO();
+        BeanUtils.copyProperties(entity, dto);
+        if (entity.getInvoice() != null) {
+            dto.setInvoiceId(entity.getInvoice().getInvoiceId());
+            dto.setInvoiceNo(entity.getInvoice().getInvoiceNo());
+        }
+        List<InvoiceReturnItemEntity> returnItems = invoiceReturnItemRepository.findByInvoiceReturnReturnIdAndIsDeletedFalse(entity.getReturnId());
+        dto.setItems(returnItems.stream().map(this::toInvoiceReturnItemDTO).collect(Collectors.toList()));
+        return dto;
+    }
+
+    private InvoiceReturnItemDTO toInvoiceReturnItemDTO(InvoiceReturnItemEntity entity) {
+        InvoiceReturnItemDTO dto = new InvoiceReturnItemDTO();
+        BeanUtils.copyProperties(entity, dto);
+        if (entity.getItem() != null) {
+            dto.setItemId(entity.getItem().getItemId());
+            dto.setItemName(entity.getItem().getItemName());
+            dto.setItemCode(entity.getItem().getItemCode());
+            dto.setItemUnit(entity.getItem().getUnit());
+        }
+        if (entity.getInvoiceItem() != null) {
+            dto.setInvoiceItemId(entity.getInvoiceItem().getInvoiceItemId());
+        }
+        return dto;
+    }
+
+    private InvoiceReturnEntity toInvoiceReturnEntity(InvoiceRecordEntity invoice, InvoiceReturnRequestDTO dto) {
+        InvoiceReturnEntity entity = new InvoiceReturnEntity();
+        BeanUtils.copyProperties(dto, entity);
+        entity.setInvoice(invoice);
+        if (entity.getReturnDate() == null) {
+            entity.setReturnDate(LocalDate.now());
+        }
+        BigDecimal totalGross = BigDecimal.ZERO;
+        BigDecimal totalDiscount = BigDecimal.ZERO;
+        BigDecimal taxableAmount = BigDecimal.ZERO;
+        BigDecimal totalCgst = BigDecimal.ZERO;
+        BigDecimal totalSgst = BigDecimal.ZERO;
+        BigDecimal totalIgst = BigDecimal.ZERO;
+        BigDecimal finalAmount = BigDecimal.ZERO;
+
+        if (dto.getItems() != null) {
+            for (InvoiceReturnItemRequestDTO item : dto.getItems()) {
+                totalGross = totalGross.add(safe(item.getGrossAmount()));
+                totalDiscount = totalDiscount.add(safe(item.getDiscountAmt()));
+                taxableAmount = taxableAmount.add(safe(item.getTaxableAmount()));
+                totalCgst = totalCgst.add(safe(item.getCgstAmt()));
+                totalSgst = totalSgst.add(safe(item.getSgstAmt()));
+                totalIgst = totalIgst.add(safe(item.getIgstAmt()));
+                finalAmount = finalAmount.add(safe(item.getLineTotal()));
+            }
+        }
+
+        entity.setTotalGrossAmount(totalGross);
+        entity.setTotalDiscount(totalDiscount);
+        entity.setTaxableAmount(taxableAmount);
+        entity.setTotalCgst(totalCgst);
+        entity.setTotalSgst(totalSgst);
+        entity.setTotalIgst(totalIgst);
+        entity.setFinalAmount(finalAmount);
+
+        return entity;
+    }
+
+    private InvoiceReturnItemEntity toInvoiceReturnItemEntity(InvoiceReturnEntity invoiceReturn, InvoiceItemEntity original, InvoiceReturnItemRequestDTO dto) {
+        InvoiceReturnItemEntity entity = new InvoiceReturnItemEntity();
+        BeanUtils.copyProperties(dto, entity);
+        entity.setInvoiceReturn(invoiceReturn);
+        entity.setInvoiceItem(original);
+        if (dto.getItemId() != null) {
+            entity.setItem(itemMasterRepository.findById(dto.getItemId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + dto.getItemId())));
+        } else {
+            entity.setItem(original.getItem());
+        }
+        if (entity.getBatchCode() == null || entity.getBatchCode().isBlank()) {
+            entity.setBatchCode(original.getBatchCode());
+        }
+        if (entity.getHsnCode() == null || entity.getHsnCode().isBlank()) {
+            entity.setHsnCode(original.getHsnCode());
+        }
+        if (entity.getQuantity() == null) {
+            entity.setQuantity(BigDecimal.ZERO);
+        }
+        if (entity.getRate() == null) {
+            entity.setRate(original.getRate());
+        }
+        if (entity.getGrossAmount() == null) {
+            entity.setGrossAmount(safe(entity.getRate()).multiply(safe(entity.getQuantity())));
+        }
+        if (entity.getTaxableAmount() == null) {
+            entity.setTaxableAmount(entity.getGrossAmount());
+        }
+        if (entity.getGstRate() == null) {
+            entity.setGstRate(original.getGstRate());
+        }
+        if (entity.getCgstAmount() == null) {
+            entity.setCgstAmount(BigDecimal.ZERO);
+        }
+        if (entity.getSgstAmount() == null) {
+            entity.setSgstAmount(BigDecimal.ZERO);
+        }
+        if (entity.getIgstAmount() == null) {
+            entity.setIgstAmount(BigDecimal.ZERO);
+        }
+        if (entity.getLineTotal() == null) {
+            entity.setLineTotal(safe(entity.getGrossAmount())
+                    .subtract(safe(entity.getDiscountAmount()))
+                    .add(safe(entity.getCgstAmount()))
+                    .add(safe(entity.getSgstAmount()))
+                    .add(safe(entity.getIgstAmount())));
+        }
+        return entity;
+    }
+
+    private BigDecimal safe(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 
     private InvoiceItemDTO toInvoiceItemDTO(InvoiceItemEntity entity) {

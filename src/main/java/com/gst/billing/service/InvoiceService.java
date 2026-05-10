@@ -2,6 +2,8 @@ package com.gst.billing.service;
 
 import com.gst.billing.dto.InvoiceBalanceDetailDTO;
 import com.gst.billing.dto.InvoiceRecordDTO;
+import com.gst.billing.dto.InvoiceReturnDTO;
+import com.gst.billing.dto.InvoiceReturnRequestDTO;
 import com.gst.billing.dto.PagedResponse;
 import org.springframework.data.domain.Pageable;
 
@@ -14,6 +16,8 @@ public interface InvoiceService {
     InvoiceRecordDTO updateInvoice(Long invoiceId, InvoiceRecordDTO invoiceRecordDTO);
     InvoiceRecordDTO getInvoiceById(Long invoiceId);
     InvoiceRecordDTO getInvoiceByNumber(String invoiceNo);
+    InvoiceReturnDTO createInvoiceReturn(String invoiceNo, InvoiceReturnRequestDTO returnRequest);
+    List<InvoiceReturnDTO> getInvoiceReturnsByInvoiceNumber(String invoiceNo);
     List<InvoiceRecordDTO> getAllInvoices();
     List<InvoiceRecordDTO> searchInvoicesByNumber(String invoiceNoPrefix);
     void deleteInvoice(Long invoiceId);

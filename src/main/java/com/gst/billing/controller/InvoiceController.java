@@ -2,6 +2,8 @@ package com.gst.billing.controller;
 
 import com.gst.billing.dto.InvoiceBalanceDetailDTO;
 import com.gst.billing.dto.InvoiceRecordDTO;
+import com.gst.billing.dto.InvoiceReturnDTO;
+import com.gst.billing.dto.InvoiceReturnRequestDTO;
 import com.gst.billing.dto.PagedResponse;
 import com.gst.billing.service.InvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +53,17 @@ public class InvoiceController {
     @GetMapping("/search-by-number")
     public InvoiceRecordDTO getInvoiceByNumber(@RequestParam String invoiceNo) {
         return invoiceService.getInvoiceByNumber(invoiceNo);
+    }
+
+    @PostMapping("/{invoiceNo}/returns")
+    public InvoiceReturnDTO createInvoiceReturn(@PathVariable String invoiceNo,
+                                                 @RequestBody InvoiceReturnRequestDTO returnRequest) {
+        return invoiceService.createInvoiceReturn(invoiceNo, returnRequest);
+    }
+
+    @GetMapping("/{invoiceNo}/returns")
+    public List<InvoiceReturnDTO> getInvoiceReturns(@PathVariable String invoiceNo) {
+        return invoiceService.getInvoiceReturnsByInvoiceNumber(invoiceNo);
     }
 
     @GetMapping
