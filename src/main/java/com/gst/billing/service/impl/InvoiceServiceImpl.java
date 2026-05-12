@@ -561,14 +561,85 @@ public class InvoiceServiceImpl implements InvoiceService {
                 dto.getItems().forEach(item -> {
                     BigDecimal returnedQuantity = returnedQuantities.getOrDefault(item.getInvoiceItemId(), BigDecimal.ZERO);
                     item.setReturnedQuantity(returnedQuantity);
-                    if (item.getQuantity() != null) {
-                        item.setAvailableQuantity(item.getQuantity().subtract(returnedQuantity));
+                    BigDecimal originalQuantity = safe(item.getQuantity());
+                    BigDecimal remainingQuantity = originalQuantity.subtract(returnedQuantity);
+                    if (remainingQuantity.compareTo(BigDecimal.ZERO) < 0) {
+                        remainingQuantity = BigDecimal.ZERO;
+                    }
+                    item.setQuantity(remainingQuantity);
+                    item.setAvailableQuantity(remainingQuantity);
+                    if (originalQuantity.compareTo(BigDecimal.ZERO) > 0) {
+                        adjustItemAmountsForReturns(item, remainingQuantity, originalQuantity);
                     }
                 });
             }
+
+            adjustInvoiceAmountsForReturns(dto);
         }
 
         return dto;
+    }
+
+    private void adjustInvoiceAmountsForReturns(InvoiceRecordDTO dto) {
+        if (dto == null || dto.getReturns() == null || dto.getReturns().isEmpty()) {
+            return;
+        }
+
+        BigDecimal totalReturnGross = dto.getReturns().stream()
+                .map(returnEntity -> safe(returnEntity.getTotalGrossAmount()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalReturnDiscount = dto.getReturns().stream()
+                .map(returnEntity -> safe(returnEntity.getTotalDiscount()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalReturnTaxable = dto.getReturns().stream()
+                .map(returnEntity -> safe(returnEntity.getTaxableAmount()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalReturnCgst = safe(dto.getTotalReturnCgst());
+        BigDecimal totalReturnSgst = safe(dto.getTotalReturnSgst());
+        BigDecimal totalReturnIgst = safe(dto.getTotalReturnIgst());
+        BigDecimal totalReturnFinal = safe(dto.getTotalReturnAmount());
+
+        dto.setTotalGrossAmount(safe(dto.getTotalGrossAmount()).subtract(totalReturnGross));
+        dto.setTotalDiscount(safe(dto.getTotalDiscount()).subtract(totalReturnDiscount));
+        dto.setTaxableAmount(safe(dto.getTaxableAmount()).subtract(totalReturnTaxable));
+        dto.setTotalCgst(safe(dto.getTotalCgst()).subtract(totalReturnCgst));
+        dto.setTotalSgst(safe(dto.getTotalSgst()).subtract(totalReturnSgst));
+        dto.setTotalIgst(safe(dto.getTotalIgst()).subtract(totalReturnIgst));
+        dto.setFinalAmount(safe(dto.getFinalAmount()).subtract(totalReturnFinal));
+
+        if (dto.getBalance() == null) {
+            dto.setBalance(new InvoiceBalanceDTO());
+        }
+
+        BigDecimal paidAmount = dto.getPayments() == null ? BigDecimal.ZERO : dto.getPayments().stream()
+                .map(payment -> payment.getAmount() == null ? BigDecimal.ZERO : payment.getAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal invoiceAmount = safe(dto.getFinalAmount());
+        BigDecimal balanceAmount = invoiceAmount.subtract(paidAmount);
+
+        InvoiceBalanceDTO balance = dto.getBalance();
+        balance.setInvoiceAmount(invoiceAmount);
+        balance.setPaidAmount(paidAmount);
+        balance.setBalanceAmount(balanceAmount);
+        if (balance.getStatus() == null || balance.getStatus().isBlank()) {
+            String status = paidAmount.compareTo(invoiceAmount) >= 0 ? "Paid"
+                    : paidAmount.compareTo(BigDecimal.ZERO) > 0 ? "Partially Paid" : "Unpaid";
+            balance.setStatus(status);
+        }
+    }
+
+    private void adjustItemAmountsForReturns(InvoiceItemDTO item, BigDecimal remainingQuantity, BigDecimal originalQuantity) {
+        if (originalQuantity.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        BigDecimal ratio = remainingQuantity.divide(originalQuantity, 10, java.math.RoundingMode.HALF_UP);
+        item.setGrossAmount(safe(item.getGrossAmount()).multiply(ratio));
+        item.setDiscountAmt(safe(item.getDiscountAmt()).multiply(ratio));
+        item.setTaxableAmount(safe(item.getTaxableAmount()).multiply(ratio));
+        item.setCgstAmt(safe(item.getCgstAmt()).multiply(ratio));
+        item.setSgstAmt(safe(item.getSgstAmt()).multiply(ratio));
+        item.setIgstAmt(safe(item.getIgstAmt()).multiply(ratio));
+        item.setLineTotal(safe(item.getLineTotal()).multiply(ratio));
     }
 
     private InvoiceReturnDTO toInvoiceReturnDTO(InvoiceReturnEntity entity) {
