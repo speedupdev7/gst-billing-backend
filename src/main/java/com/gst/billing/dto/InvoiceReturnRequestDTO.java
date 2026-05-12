@@ -9,6 +9,7 @@ import java.util.List;
 @Getter
 @Setter
 public class InvoiceReturnRequestDTO {
+    private String invoiceNo;
     private String returnNo;
     private LocalDate returnDate;
     private String returnType;

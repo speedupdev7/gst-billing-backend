@@ -23,6 +23,7 @@ create table if not exists invoice_return (
     round_off        numeric(10,2) default 0,
     final_amount     numeric(14,2) default 0,
 
+    is_active        boolean default true,
     is_deleted       boolean default false,
     deleted_at       timestamp,
     created_at       timestamp default current_timestamp,
@@ -51,6 +52,7 @@ create table if not exists invoice_return_item (
     igst_amt         numeric(14,2),
     line_total       numeric(14,2),
 
+    is_active        boolean default true,
     is_deleted       boolean default false,
     deleted_at       timestamp,
     created_at       timestamp default current_timestamp,

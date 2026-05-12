@@ -55,10 +55,9 @@ public class InvoiceController {
         return invoiceService.getInvoiceByNumber(invoiceNo);
     }
 
-    @PostMapping("/{invoiceNo}/returns")
-    public InvoiceReturnDTO createInvoiceReturn(@PathVariable String invoiceNo,
-                                                 @RequestBody InvoiceReturnRequestDTO returnRequest) {
-        return invoiceService.createInvoiceReturn(invoiceNo, returnRequest);
+    @PostMapping("/returns")
+    public InvoiceReturnDTO createInvoiceReturn(@RequestBody InvoiceReturnRequestDTO returnRequest) {
+        return invoiceService.createInvoiceReturn(returnRequest.getInvoiceNo(), returnRequest);
     }
 
     @GetMapping("/{invoiceNo}/returns")
