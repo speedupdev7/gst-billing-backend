@@ -18,5 +18,7 @@ public class InvoiceBalanceDetailDTO {
     private LocalDate invoiceDate;    // invoice date from invoice_record
     private BigDecimal invoiceAmount; // invoice amount from invoice_balance
     private String status;            // status from invoice_balance
-    private String unitName;          // unit name from unit_master
+    private String unitName; 
+    private BigDecimal paidAmount;    // unit name from unit_master
+    private BigDecimal pendingAmount; // invoice amount from invoice_balance
 }

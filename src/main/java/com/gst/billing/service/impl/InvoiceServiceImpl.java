@@ -790,6 +790,8 @@ public class InvoiceServiceImpl implements InvoiceService {
         InvoiceBalanceDetailDTO dto = new InvoiceBalanceDetailDTO();
         dto.setBalanceId(entity.getBalanceId());
         dto.setInvoiceAmount(entity.getInvoiceAmount());
+        dto.setPaidAmount(entity.getPaidAmount());
+        dto.setPendingAmount(entity.getBalanceAmount());
         dto.setStatus(entity.getStatus());
 
         if (entity.getInvoice() != null) {
