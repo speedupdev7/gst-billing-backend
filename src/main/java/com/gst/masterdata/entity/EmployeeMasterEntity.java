@@ -8,7 +8,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "employee_master")
+@Table(name = "master_employee")
 @Getter
 @Setter
 public class EmployeeMasterEntity extends BaseMasterEntity {

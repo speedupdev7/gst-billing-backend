@@ -8,7 +8,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "item_master")
+@Table(name = "master_item")
 @Getter @Setter
 public class ItemMasterEntity extends BaseMasterEntity {
 

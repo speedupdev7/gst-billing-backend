@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "role_master")
+@Table(name = "master_role")
 @Getter
 @Setter
 public class RoleMasterEntity extends BaseMasterEntity {

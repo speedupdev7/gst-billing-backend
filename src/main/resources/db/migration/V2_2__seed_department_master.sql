@@ -11,7 +11,7 @@ SET search_path TO public;
 -- ======================
 -- DEPARTMENT MASTER SEED DATA
 -- ======================
-insert into department_master (department_code, department_name, description, is_system_department, is_active)
+insert into master_department (department_code, department_name, description, is_system_department, is_active)
 values
 ('ADMIN', 'Administration', 'Administrative department handling overall operations', true, true),
 ('HR', 'Human Resources', 'Human Resources and employee management', false, true),
@@ -26,7 +26,7 @@ values
 ON CONFLICT (department_code) DO NOTHING;
 
 -- Ensure sequence is in sync
-select setval(pg_get_serial_sequence('department_master','department_id'), (select coalesce(max(department_id),0) from department_master));
+select setval(pg_get_serial_sequence('master_department','department_id'), (select coalesce(max(department_id),0) from master_department));
 
 -- =========================================================
 -- END OF SEED MIGRATION V2.2

@@ -10,7 +10,7 @@ SET search_path TO public;
 -- =======================
 -- 1. ROLE MASTER
 -- =======================
-create table if not exists role_master (
+create table if not exists master_role (
     role_id         bigserial primary key,
     role_code       varchar(20) not null unique,
     role_name       varchar(100) not null,
@@ -28,7 +28,7 @@ create table if not exists role_master (
 -- =======================
 -- 1.1 DEPARTMENT MASTER
 -- =======================
-create table if not exists department_master (
+create table if not exists master_department (
     department_id         bigserial primary key,
     department_code       varchar(20) not null unique,
     department_name       varchar(100) not null,
@@ -46,7 +46,7 @@ create table if not exists department_master (
 -- =======================
 -- 2. DESIGNATION MASTER
 -- =======================
-create table if not exists designation_master (
+create table if not exists master_designation (
     designation_id   bigserial primary key,
     designation_code varchar(20) not null unique,
     designation_name varchar(100) not null,
@@ -63,7 +63,7 @@ create table if not exists designation_master (
 -- =======================
 -- 3. QUALIFICATION MASTER
 -- =======================
-create table if not exists qualification_master (
+create table if not exists master_qualification (
     qualification_id   bigserial primary key,
     qualification_code varchar(20) not null unique,
     qualification_name varchar(100) not null,
@@ -80,7 +80,7 @@ create table if not exists qualification_master (
 -- =======================
 -- 4. CITY MASTER
 -- =======================
-create table if not exists city_master (
+create table if not exists master_city (
     city_id     bigserial primary key,
     city_code   varchar(20) not null unique,
     city_name   varchar(100) not null,
@@ -98,7 +98,7 @@ create table if not exists city_master (
 -- =======================
 -- 5. EXPENSES MASTER
 -- =======================
-create table if not exists expenses_master (
+create table if not exists master_expenses (
     expense_id      bigserial primary key,
     expense_code    varchar(20) not null unique,
     expense_name    varchar(100) not null,
@@ -116,7 +116,7 @@ create table if not exists expenses_master (
 -- =======================
 -- 6. EMPLOYEE MASTER
 -- =======================
-create table if not exists employee_master (
+create table if not exists master_employee (
     employee_id       bigserial primary key,
     employee_code     varchar(20) not null unique,
     first_name        varchar(100) not null,
@@ -145,19 +145,19 @@ create table if not exists employee_master (
 
     constraint fk_employee_designation
         foreign key (designation_id)
-        references designation_master (designation_id),
+        references master_designation (designation_id),
 
     constraint fk_employee_qualification
         foreign key (qualification_id)
-        references qualification_master (qualification_id),
+        references master_qualification (qualification_id),
 
     constraint fk_employee_city
         foreign key (city_id)
-        references city_master (city_id),
+        references master_city (city_id),
 
     constraint fk_employee_role
         foreign key (role_id)
-        references role_master (role_id)
+        references master_role (role_id)
 );
 
 -- =========================================================
@@ -166,44 +166,44 @@ create table if not exists employee_master (
 
 -- Foreign key indexes
 create index if not exists idx_employee_designation_id
-    on employee_master (designation_id);
+    on master_employee (designation_id);
 
 create index if not exists idx_employee_qualification_id
-    on employee_master (qualification_id);
+    on master_employee (qualification_id);
 
 create index if not exists idx_employee_city_id
-    on employee_master (city_id);
+    on master_employee (city_id);
 
 create index if not exists idx_employee_role_id
-    on employee_master (role_id);
+    on master_employee (role_id);
 
 -- Partial indexes for active & not deleted records
 create index if not exists idx_role_active_not_deleted
-    on role_master (is_active)
+    on master_role (is_active)
     where is_deleted = false;
 
 create index if not exists idx_department_active_not_deleted
-    on department_master (is_active)
+    on master_department (is_active)
     where is_deleted = false;
 
 create index if not exists idx_designation_active_not_deleted
-    on designation_master (is_active)
+    on master_designation (is_active)
     where is_deleted = false;
 
 create index if not exists idx_qualification_active_not_deleted
-    on qualification_master (is_active)
+    on master_qualification (is_active)
     where is_deleted = false;
 
 create index if not exists idx_city_active_not_deleted
-    on city_master (is_active)
+    on master_city (is_active)
     where is_deleted = false;
 
 create index if not exists idx_expenses_active_not_deleted
-    on expenses_master (is_active)
+    on master_expenses (is_active)
     where is_deleted = false;
 
 create index if not exists idx_employee_active_not_deleted
-    on employee_master (is_active)
+    on master_employee (is_active)
     where is_deleted = false;
 
 -- =========================================================
@@ -223,7 +223,7 @@ $$ language plpgsql;
 -- ROLE MASTER TRIGGER
 -- =======================
 create trigger trg_role_master_updated_at
-before update on role_master
+before update on master_role
 for each row
 execute function fn_set_updated_at();
 
@@ -231,7 +231,7 @@ execute function fn_set_updated_at();
 -- DEPARTMENT MASTER TRIGGER
 -- =======================
 create trigger trg_department_master_updated_at
-before update on department_master
+before update on master_department
 for each row
 execute function fn_set_updated_at();
 
@@ -239,7 +239,7 @@ execute function fn_set_updated_at();
 -- DESIGNATION MASTER TRIGGER
 -- =======================
 create trigger trg_designation_master_updated_at
-before update on designation_master
+before update on master_designation
 for each row
 execute function fn_set_updated_at();
 
@@ -247,7 +247,7 @@ execute function fn_set_updated_at();
 -- QUALIFICATION MASTER TRIGGER
 -- =======================
 create trigger trg_qualification_master_updated_at
-before update on qualification_master
+before update on master_qualification
 for each row
 execute function fn_set_updated_at();
 
@@ -255,7 +255,7 @@ execute function fn_set_updated_at();
 -- CITY MASTER TRIGGER
 -- =======================
 create trigger trg_city_master_updated_at
-before update on city_master
+before update on master_city
 for each row
 execute function fn_set_updated_at();
 
@@ -263,7 +263,7 @@ execute function fn_set_updated_at();
 -- EXPENSES MASTER TRIGGER
 -- =======================
 create trigger trg_expenses_master_updated_at
-before update on expenses_master
+before update on master_expenses
 for each row
 execute function fn_set_updated_at();
 
@@ -271,7 +271,7 @@ execute function fn_set_updated_at();
 -- EMPLOYEE MASTER TRIGGER
 -- =======================
 create trigger trg_employee_master_updated_at
-before update on employee_master
+before update on master_employee
 for each row
 execute function fn_set_updated_at();
 

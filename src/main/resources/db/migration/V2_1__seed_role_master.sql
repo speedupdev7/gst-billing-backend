@@ -11,7 +11,7 @@ SET search_path TO public;
 -- ======================
 -- ROLE MASTER SEED DATA
 -- ======================
-insert into role_master (role_code, role_name, description, is_system_role, is_active)
+insert into master_role (role_code, role_name, description, is_system_role, is_active)
 values
 ('ADMIN', 'Administrator', 'Full system access with all permissions', true, true),
 ('SUPER_ADMIN', 'Super Administrator', 'System admin with override capabilities', true, true),
@@ -28,7 +28,7 @@ values
 ON CONFLICT (role_code) DO NOTHING;
 
 -- Ensure sequence is in sync
-select setval(pg_get_serial_sequence('role_master','role_id'), (select coalesce(max(role_id),0) from role_master));
+select setval(pg_get_serial_sequence('master_role','role_id'), (select coalesce(max(role_id),0) from master_role));
 
 -- =========================================================
 -- END OF SEED MIGRATION V2.1

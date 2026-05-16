@@ -7,9 +7,9 @@
 -- =========================================================
 
 -- ======================
--- 1. UNITS (unit_master)
+-- 1. UNITS (master_unit)
 -- ======================
-insert into unit_master (unit_name, gstin, address, state, state_code, email, mobile_no, pan, city, pin_code, bank_name, account_number, ifsc_code, is_active)
+insert into master_unit (unit_name, gstin, address, state, state_code, email, mobile_no, pan, city, pin_code, bank_name, account_number, ifsc_code, is_active)
 values
 ('Acme Industries', '27AAACM1234A1Z1', '123 Industrial Area, Pune', 'Maharashtra', '27', 'acme@example.com', '9876543210', 'AAACM1234A', 'Pune', '411001', 'State Bank of India', '123456789012', 'SBIN0001234', true),
 ('Beta Traders', '07AABBT1234B1Z2', '45 Market Road, Delhi', 'Delhi', '07', 'beta@example.com', '9876500001', 'AABBT1234B', 'New Delhi', '110001', 'HDFC Bank', '234567890123', 'HDFC0002345', true),
@@ -24,16 +24,16 @@ values
 ON CONFLICT DO NOTHING;
 
 -- Ensure sequence is in sync
-select setval(pg_get_serial_sequence('unit_master','unit_id'), (select coalesce(max(unit_id),0) from unit_master));
+select setval(pg_get_serial_sequence('master_unit','unit_id'), (select coalesce(max(unit_id),0) from master_unit));
 
 -- ======================
--- 2. ITEMS (item_master)
+-- 2. ITEMS (master_item)
 -- ======================
 -- Add batch_code column if not exists
-alter table item_master
+alter table master_item
 add column if not exists batch_code varchar(100);
 
-insert into item_master (item_code, item_name, hsn_code, unit, gst_rate, purchase_price, sale_price, mrp, opening_stock, batch_code, is_active)
+insert into master_item (item_code, item_name, hsn_code, unit, gst_rate, purchase_price, sale_price, mrp, opening_stock, batch_code, is_active)
 values
 ('ITM-1001', 'Plain T-Shirt', '6109', 'PCS', 18.00, 199.00, 299.00, 349.00, 100, 'BATCH01', true),
 ('ITM-1002', 'Formal Shirt', '6205', 'PCS', 12.00, 599.00, 799.00, 899.00, 75, 'BATCH02', true),
@@ -47,12 +47,12 @@ values
 ('ITM-1010', 'Coffee Mug', '6912', 'PCS', 18.00, 119.00, 149.00, 179.00, 90, 'BATCH10', true)
 ON CONFLICT DO NOTHING;
 
-select setval(pg_get_serial_sequence('item_master','item_id'), (select coalesce(max(item_id),0) from item_master));
+select setval(pg_get_serial_sequence('master_item','item_id'), (select coalesce(max(item_id),0) from master_item));
 
 -- ==========================
--- 3. CUSTOMERS (customer_master)
+-- 3. CUSTOMERS (master_customer)
 -- ==========================
-insert into customer_master (customer_name, gstin, state, state_code, email, mobile_no, customer_type, pin_code, district, billing_address, is_active)
+insert into master_customer (customer_name, gstin, state, state_code, email, mobile_no, customer_type, pin_code, district, billing_address, is_active)
 values
 ('Sunrise Retailers', '27AASRS1234K1Z1', 'Maharashtra', '27', 'sunrise@example.com', '9000000001', 'B2B', '411001', 'Pune', '10 Retail Lane, Pune', true),
 ('Moonlight Stores', '07AAMLS1234L1Z2', 'Delhi', '07', 'moonlight@example.com', '9000000002', 'B2C', '110001', 'New Delhi', '5 Market St, Delhi', true),
@@ -66,12 +66,12 @@ values
 ('Central Fabricators', '23AACF1234T1Z0', 'Madhya Pradesh', '23', 'central@example.com', '9000000010', 'B2B', '462001', 'Bhopal', '200 Fabrication St, Bhopal', true)
 ON CONFLICT DO NOTHING;
 
-select setval(pg_get_serial_sequence('customer_master','customer_id'), (select coalesce(max(customer_id),0) from customer_master));
+select setval(pg_get_serial_sequence('master_customer','customer_id'), (select coalesce(max(customer_id),0) from master_customer));
 
 -- ==========================
--- 4. SUPPLIERS (supplier_master)
+-- 4. SUPPLIERS (master_supplier)
 -- ==========================
-insert into supplier_master (supplier_name, gstin, address, state, state_code, email, mobile_no, is_active)
+insert into master_supplier (supplier_name, gstin, address, state, state_code, email, mobile_no, is_active)
 values
 ('Alpha Suppliers', '27AAAAS1234U1Z1', '1 Supplier Lane, Pune', 'Maharashtra', '27', 'alpha@example.com', '9111111111', true),
 ('Bright Wholesalers', '07AABW1234V1Z2', '2 Wholesale Rd, Delhi', 'Delhi', '07', 'bright@example.com', '9111111112', true),
@@ -85,7 +85,7 @@ values
 ('Jupiter Manufacturing', '17AAJM1234D1Z0', '10 Factory Ln, Bhopal', 'Madhya Pradesh', '23', 'jupiter@example.com', '9111111120', true)
 ON CONFLICT DO NOTHING;
 
-select setval(pg_get_serial_sequence('supplier_master','supplier_id'), (select coalesce(max(supplier_id),0) from supplier_master));
+select setval(pg_get_serial_sequence('master_supplier','supplier_id'), (select coalesce(max(supplier_id),0) from master_supplier));
 
 -- ========================================
 -- 5. INVOICES (invoice_record) - 10 records
@@ -93,16 +93,16 @@ select setval(pg_get_serial_sequence('supplier_master','supplier_id'), (select c
 -- We'll create 10 invoices, each linked to the units/customers inserted above using subselects
 insert into invoice_record (invoice_no, invoice_date, unit_id, customer_id, place_of_supply, state_code, total_gross_amt, taxable_amount, total_cgst, total_sgst, total_igst, final_amount, transporter_name)
 values
-('INV-2026-0001', '2026-01-05', (select unit_id from unit_master where unit_name = 'Acme Industries'), (select customer_id from customer_master where customer_name = 'Sunrise Retailers'), 'Pune', '27', 1000.00, 847.46, 76.27, 76.27, 0.00, 1000.00, 'FastTrans'),
-('INV-2026-0002', '2026-01-06', (select unit_id from unit_master where unit_name = 'Beta Traders'), (select customer_id from customer_master where customer_name = 'Moonlight Stores'), 'New Delhi', '07', 1500.00, 1271.19, 114.24, 114.24, 0.00, 1500.00, 'CityLog'),
-('INV-2026-0003', '2026-01-07', (select unit_id from unit_master where unit_name = 'Gamma Enterprises'), (select customer_id from customer_master where customer_name = 'Stellar Traders'), 'Bengaluru', '29', 45999.00, 38982.20, 3508.99, 3508.99, 0.00, 45999.00, 'InterMove'),
-('INV-2026-0004', '2026-01-08', (select unit_id from unit_master where unit_name = 'Delta Pvt Ltd'), (select customer_id from customer_master where customer_name = 'Cosmic Enterprises'), 'Chennai', '33', 5999.00, 5084.75, 457.12, 457.13, 0.00, 5999.00, 'RoadXpress'),
-('INV-2026-0005', '2026-01-09', (select unit_id from unit_master where unit_name = 'Epsilon Co'), (select customer_id from customer_master where customer_name = 'Desert Mart'), 'Jaipur', '08', 249.00, 210.17, 18.94, 18.94, 0.00, 249.00, 'ShipFast'),
-('INV-2026-0006', '2026-01-10', (select unit_id from unit_master where unit_name = 'Zeta Solutions'), (select customer_id from customer_master where customer_name = 'Gujarat Wholesale'), 'Surat', '24', 99.00, 83.90, 7.05, 7.05, 0.00, 99.00, 'QuickHaul'),
-('INV-2026-0007', '2026-01-11', (select unit_id from unit_master where unit_name = 'Eta Logistics'), (select customer_id from customer_master where customer_name = 'Bengal Distributors'), 'Kolkata', '19', 599.00, 507.63, 42.63, 42.64, 0.00, 599.00, 'CargoPro'),
-('INV-2026-0008', '2026-01-12', (select unit_id from unit_master where unit_name = 'Theta Services'), (select customer_id from customer_master where customer_name = 'Island Imports'), 'Mumbai', '27', 149.00, 126.27, 11.37, 11.36, 0.00, 149.00, 'MetroTrans'),
-('INV-2026-0009', '2026-01-13', (select unit_id from unit_master where unit_name = 'Iota Retail'), (select customer_id from customer_master where customer_name = 'Lucknow Supplies'), 'Lucknow', '09', 1299.00, 1100.85, 98.57, 98.58, 0.00, 1299.00, 'RuralShip'),
-('INV-2026-0010', '2026-01-14', (select unit_id from unit_master where unit_name = 'Kappa Manufacturing'), (select customer_id from customer_master where customer_name = 'Central Fabricators'), 'Bhopal', '23', 49.00, 41.53, 3.72, 3.75, 0.00, 49.00, 'TinyMove')
+('INV-2026-0001', '2026-01-05', (select unit_id from master_unit where unit_name = 'Acme Industries'), (select customer_id from master_customer where customer_name = 'Sunrise Retailers'), 'Pune', '27', 1000.00, 847.46, 76.27, 76.27, 0.00, 1000.00, 'FastTrans'),
+('INV-2026-0002', '2026-01-06', (select unit_id from master_unit where unit_name = 'Beta Traders'), (select customer_id from master_customer where customer_name = 'Moonlight Stores'), 'New Delhi', '07', 1500.00, 1271.19, 114.24, 114.24, 0.00, 1500.00, 'CityLog'),
+('INV-2026-0003', '2026-01-07', (select unit_id from master_unit where unit_name = 'Gamma Enterprises'), (select customer_id from master_customer where customer_name = 'Stellar Traders'), 'Bengaluru', '29', 45999.00, 38982.20, 3508.99, 3508.99, 0.00, 45999.00, 'InterMove'),
+('INV-2026-0004', '2026-01-08', (select unit_id from master_unit where unit_name = 'Delta Pvt Ltd'), (select customer_id from master_customer where customer_name = 'Cosmic Enterprises'), 'Chennai', '33', 5999.00, 5084.75, 457.12, 457.13, 0.00, 5999.00, 'RoadXpress'),
+('INV-2026-0005', '2026-01-09', (select unit_id from master_unit where unit_name = 'Epsilon Co'), (select customer_id from master_customer where customer_name = 'Desert Mart'), 'Jaipur', '08', 249.00, 210.17, 18.94, 18.94, 0.00, 249.00, 'ShipFast'),
+('INV-2026-0006', '2026-01-10', (select unit_id from master_unit where unit_name = 'Zeta Solutions'), (select customer_id from master_customer where customer_name = 'Gujarat Wholesale'), 'Surat', '24', 99.00, 83.90, 7.05, 7.05, 0.00, 99.00, 'QuickHaul'),
+('INV-2026-0007', '2026-01-11', (select unit_id from master_unit where unit_name = 'Eta Logistics'), (select customer_id from master_customer where customer_name = 'Bengal Distributors'), 'Kolkata', '19', 599.00, 507.63, 42.63, 42.64, 0.00, 599.00, 'CargoPro'),
+('INV-2026-0008', '2026-01-12', (select unit_id from master_unit where unit_name = 'Theta Services'), (select customer_id from master_customer where customer_name = 'Island Imports'), 'Mumbai', '27', 149.00, 126.27, 11.37, 11.36, 0.00, 149.00, 'MetroTrans'),
+('INV-2026-0009', '2026-01-13', (select unit_id from master_unit where unit_name = 'Iota Retail'), (select customer_id from master_customer where customer_name = 'Lucknow Supplies'), 'Lucknow', '09', 1299.00, 1100.85, 98.57, 98.58, 0.00, 1299.00, 'RuralShip'),
+('INV-2026-0010', '2026-01-14', (select unit_id from master_unit where unit_name = 'Kappa Manufacturing'), (select customer_id from master_customer where customer_name = 'Central Fabricators'), 'Bhopal', '23', 49.00, 41.53, 3.72, 3.75, 0.00, 49.00, 'TinyMove')
 ON CONFLICT DO NOTHING;
 
 select setval(pg_get_serial_sequence('invoice_record','invoice_id'), (select coalesce(max(invoice_id),0) from invoice_record));
@@ -112,16 +112,16 @@ select setval(pg_get_serial_sequence('invoice_record','invoice_id'), (select coa
 -- ========================================
 insert into invoice_item (invoice_id, item_id, batch_code, hsn_code, quantity, rate, gross_amount, discount_pct, discount_amt, taxable_amount, gst_rate, cgst_amt, sgst_amt, igst_amt, line_total)
 values
-((select invoice_id from invoice_record where invoice_no='INV-2026-0001'), (select item_id from item_master where item_code='ITM-1001'), 'BATCH-01','6109', 2, 299.00, 598.00, 0, 0.00, 598.00, 18.00, 53.82, 53.82, 0.00, 705.64),
-((select invoice_id from invoice_record where invoice_no='INV-2026-0002'), (select item_id from item_master where item_code='ITM-1002'), 'BATCH-02','6205', 1, 799.00, 799.00, 0, 0.00, 799.00, 12.00, 47.94, 47.94, 0.00, 894.88),
-((select invoice_id from invoice_record where invoice_no='INV-2026-0003'), (select item_id from item_master where item_code='ITM-1004'), 'BATCH-03','8471', 1, 45999.00, 45999.00, 0, 0.00, 45999.00, 18.00, 4139.91, 4139.91, 0.00, 54278.82),
-((select invoice_id from invoice_record where invoice_no='INV-2026-0004'), (select item_id from item_master where item_code='ITM-1006'), 'BATCH-04','9401', 1, 5999.00, 5999.00, 0, 0.00, 5999.00, 18.00, 539.91, 539.91, 0.00, 7078.82),
-((select invoice_id from invoice_record where invoice_no='INV-2026-0005'), (select item_id from item_master where item_code='ITM-1009'), 'BATCH-05','8539', 1, 249.00, 249.00, 0, 0.00, 249.00, 18.00, 22.41, 22.41, 0.00, 293.82),
-((select invoice_id from invoice_record where invoice_no='INV-2026-0006'), (select item_id from item_master where item_code='ITM-1008'), 'BATCH-06','9608', 1, 99.00, 99.00, 0, 0.00, 99.00, 12.00, 5.94, 5.94, 0.00, 110.88),
-((select invoice_id from invoice_record where invoice_no='INV-2026-0007'), (select item_id from item_master where item_code='ITM-1003'), 'BATCH-07','6203', 1, 1299.00, 1299.00, 0, 0.00, 1299.00, 18.00, 116.91, 116.91, 0.00, 1532.82),
-((select invoice_id from invoice_record where invoice_no='INV-2026-0008'), (select item_id from item_master where item_code='ITM-1010'), 'BATCH-08','6912', 1, 149.00, 149.00, 0, 0.00, 149.00, 18.00, 13.41, 13.41, 0.00, 175.82),
-((select invoice_id from invoice_record where invoice_no='INV-2026-0009'), (select item_id from item_master where item_code='ITM-1005'), 'BATCH-09','8544', 2, 199.00, 398.00, 0, 0.00, 398.00, 18.00, 35.82, 35.82, 0.00, 469.64),
-((select invoice_id from invoice_record where invoice_no='INV-2026-0010'), (select item_id from item_master where item_code='ITM-1007'), 'BATCH-10','4820', 10, 49.00, 490.00, 0, 0.00, 490.00, 12.00, 29.40, 29.40, 0.00, 548.80)
+((select invoice_id from invoice_record where invoice_no='INV-2026-0001'), (select item_id from master_item where item_code='ITM-1001'), 'BATCH-01','6109', 2, 299.00, 598.00, 0, 0.00, 598.00, 18.00, 53.82, 53.82, 0.00, 705.64),
+((select invoice_id from invoice_record where invoice_no='INV-2026-0002'), (select item_id from master_item where item_code='ITM-1002'), 'BATCH-02','6205', 1, 799.00, 799.00, 0, 0.00, 799.00, 12.00, 47.94, 47.94, 0.00, 894.88),
+((select invoice_id from invoice_record where invoice_no='INV-2026-0003'), (select item_id from master_item where item_code='ITM-1004'), 'BATCH-03','8471', 1, 45999.00, 45999.00, 0, 0.00, 45999.00, 18.00, 4139.91, 4139.91, 0.00, 54278.82),
+((select invoice_id from invoice_record where invoice_no='INV-2026-0004'), (select item_id from master_item where item_code='ITM-1006'), 'BATCH-04','9401', 1, 5999.00, 5999.00, 0, 0.00, 5999.00, 18.00, 539.91, 539.91, 0.00, 7078.82),
+((select invoice_id from invoice_record where invoice_no='INV-2026-0005'), (select item_id from master_item where item_code='ITM-1009'), 'BATCH-05','8539', 1, 249.00, 249.00, 0, 0.00, 249.00, 18.00, 22.41, 22.41, 0.00, 293.82),
+((select invoice_id from invoice_record where invoice_no='INV-2026-0006'), (select item_id from master_item where item_code='ITM-1008'), 'BATCH-06','9608', 1, 99.00, 99.00, 0, 0.00, 99.00, 12.00, 5.94, 5.94, 0.00, 110.88),
+((select invoice_id from invoice_record where invoice_no='INV-2026-0007'), (select item_id from master_item where item_code='ITM-1003'), 'BATCH-07','6203', 1, 1299.00, 1299.00, 0, 0.00, 1299.00, 18.00, 116.91, 116.91, 0.00, 1532.82),
+((select invoice_id from invoice_record where invoice_no='INV-2026-0008'), (select item_id from master_item where item_code='ITM-1010'), 'BATCH-08','6912', 1, 149.00, 149.00, 0, 0.00, 149.00, 18.00, 13.41, 13.41, 0.00, 175.82),
+((select invoice_id from invoice_record where invoice_no='INV-2026-0009'), (select item_id from master_item where item_code='ITM-1005'), 'BATCH-09','8544', 2, 199.00, 398.00, 0, 0.00, 398.00, 18.00, 35.82, 35.82, 0.00, 469.64),
+((select invoice_id from invoice_record where invoice_no='INV-2026-0010'), (select item_id from master_item where item_code='ITM-1007'), 'BATCH-10','4820', 10, 49.00, 490.00, 0, 0.00, 490.00, 12.00, 29.40, 29.40, 0.00, 548.80)
 ON CONFLICT DO NOTHING;
 
 select setval(pg_get_serial_sequence('invoice_item','invoice_item_id'), (select coalesce(max(invoice_item_id),0) from invoice_item));
@@ -169,16 +169,16 @@ select setval(pg_get_serial_sequence('invoice_balance','balance_id'), (select co
 -- =========================================================
 insert into gst_adjustment_note (note_type, note_no, note_date, original_invoice_id, unit_id, customer_id, reason_code, reason_text, taxable_amount, cgst_amount, sgst_amount, igst_amount, total_amount)
 values
-('CREDIT','CRN-0001','2026-01-20',(select invoice_id from invoice_record where invoice_no='INV-2026-0001'),(select unit_id from unit_master where unit_name='Acme Industries'),(select customer_id from customer_master where customer_name='Sunrise Retailers'),'PRICE_ERR','Price correction',100.00,9.00,9.00,0.00,118.00),
-('DEBIT','DBN-0002','2026-01-21',(select invoice_id from invoice_record where invoice_no='INV-2026-0002'),(select unit_id from unit_master where unit_name='Beta Traders'),(select customer_id from customer_master where customer_name='Moonlight Stores'),'ADDNL_CHG','Additional charge',50.00,3.00,3.00,0.00,56.00),
-('CREDIT','CRN-0003','2026-01-22',(select invoice_id from invoice_record where invoice_no='INV-2026-0003'),(select unit_id from unit_master where unit_name='Gamma Enterprises'),(select customer_id from customer_master where customer_name='Stellar Traders'),'DISC','Discount reversed',200.00,18.00,18.00,0.00,236.00),
-('CREDIT','CRN-0004','2026-01-23',(select invoice_id from invoice_record where invoice_no='INV-2026-0004'),(select unit_id from unit_master where unit_name='Delta Pvt Ltd'),(select customer_id from customer_master where customer_name='Cosmic Enterprises'),'RET','Return processed',599.00,53.91,53.92,0.00,706.83),
-('DEBIT','DBN-0005','2026-01-24',(select invoice_id from invoice_record where invoice_no='INV-2026-0005'),(select unit_id from unit_master where unit_name='Epsilon Co'),(select customer_id from customer_master where customer_name='Desert Mart'),'EXTRA','Extra packing',20.00,1.80,1.80,0.00,23.60),
-('CREDIT','CRN-0006','2026-01-25',(select invoice_id from invoice_record where invoice_no='INV-2026-0006'),(select unit_id from unit_master where unit_name='Zeta Solutions'),(select customer_id from customer_master where customer_name='Gujarat Wholesale'),'PRICE_ERR','Price correction',10.00,0.90,0.90,0.00,11.80),
-('DEBIT','DBN-0007','2026-01-26',(select invoice_id from invoice_record where invoice_no='INV-2026-0007'),(select unit_id from unit_master where unit_name='Eta Logistics'),(select customer_id from customer_master where customer_name='Bengal Distributors'),'LATE_FEE','Late fee',30.00,2.70,2.70,0.00,35.40),
-('CREDIT','CRN-0008','2026-01-27',(select invoice_id from invoice_record where invoice_no='INV-2026-0008'),(select unit_id from unit_master where unit_name='Theta Services'),(select customer_id from customer_master where customer_name='Island Imports'),'DISC','Discount given',15.00,1.35,1.35,0.00,17.70),
-('DEBIT','DBN-0009','2026-01-28',(select invoice_id from invoice_record where invoice_no='INV-2026-0009'),(select unit_id from unit_master where unit_name='Iota Retail'),(select customer_id from customer_master where customer_name='Lucknow Supplies'),'HANDLING','Handling charge',25.00,2.25,2.25,0.00,29.50),
-('CREDIT','CRN-0010','2026-01-29',(select invoice_id from invoice_record where invoice_no='INV-2026-0010'),(select unit_id from unit_master where unit_name='Kappa Manufacturing'),(select customer_id from customer_master where customer_name='Central Fabricators'),'ADJ','Misc adjustment',5.00,0.45,0.45,0.00,5.90)
+('CREDIT','CRN-0001','2026-01-20',(select invoice_id from invoice_record where invoice_no='INV-2026-0001'),(select unit_id from master_unit where unit_name='Acme Industries'),(select customer_id from master_customer where customer_name='Sunrise Retailers'),'PRICE_ERR','Price correction',100.00,9.00,9.00,0.00,118.00),
+('DEBIT','DBN-0002','2026-01-21',(select invoice_id from invoice_record where invoice_no='INV-2026-0002'),(select unit_id from master_unit where unit_name='Beta Traders'),(select customer_id from master_customer where customer_name='Moonlight Stores'),'ADDNL_CHG','Additional charge',50.00,3.00,3.00,0.00,56.00),
+('CREDIT','CRN-0003','2026-01-22',(select invoice_id from invoice_record where invoice_no='INV-2026-0003'),(select unit_id from master_unit where unit_name='Gamma Enterprises'),(select customer_id from master_customer where customer_name='Stellar Traders'),'DISC','Discount reversed',200.00,18.00,18.00,0.00,236.00),
+('CREDIT','CRN-0004','2026-01-23',(select invoice_id from invoice_record where invoice_no='INV-2026-0004'),(select unit_id from master_unit where unit_name='Delta Pvt Ltd'),(select customer_id from master_customer where customer_name='Cosmic Enterprises'),'RET','Return processed',599.00,53.91,53.92,0.00,706.83),
+('DEBIT','DBN-0005','2026-01-24',(select invoice_id from invoice_record where invoice_no='INV-2026-0005'),(select unit_id from master_unit where unit_name='Epsilon Co'),(select customer_id from master_customer where customer_name='Desert Mart'),'EXTRA','Extra packing',20.00,1.80,1.80,0.00,23.60),
+('CREDIT','CRN-0006','2026-01-25',(select invoice_id from invoice_record where invoice_no='INV-2026-0006'),(select unit_id from master_unit where unit_name='Zeta Solutions'),(select customer_id from master_customer where customer_name='Gujarat Wholesale'),'PRICE_ERR','Price correction',10.00,0.90,0.90,0.00,11.80),
+('DEBIT','DBN-0007','2026-01-26',(select invoice_id from invoice_record where invoice_no='INV-2026-0007'),(select unit_id from master_unit where unit_name='Eta Logistics'),(select customer_id from master_customer where customer_name='Bengal Distributors'),'LATE_FEE','Late fee',30.00,2.70,2.70,0.00,35.40),
+('CREDIT','CRN-0008','2026-01-27',(select invoice_id from invoice_record where invoice_no='INV-2026-0008'),(select unit_id from master_unit where unit_name='Theta Services'),(select customer_id from master_customer where customer_name='Island Imports'),'DISC','Discount given',15.00,1.35,1.35,0.00,17.70),
+('DEBIT','DBN-0009','2026-01-28',(select invoice_id from invoice_record where invoice_no='INV-2026-0009'),(select unit_id from master_unit where unit_name='Iota Retail'),(select customer_id from master_customer where customer_name='Lucknow Supplies'),'HANDLING','Handling charge',25.00,2.25,2.25,0.00,29.50),
+('CREDIT','CRN-0010','2026-01-29',(select invoice_id from invoice_record where invoice_no='INV-2026-0010'),(select unit_id from master_unit where unit_name='Kappa Manufacturing'),(select customer_id from master_customer where customer_name='Central Fabricators'),'ADJ','Misc adjustment',5.00,0.45,0.45,0.00,5.90)
 ON CONFLICT DO NOTHING;
 
 select setval(pg_get_serial_sequence('gst_adjustment_note','note_id'), (select coalesce(max(note_id),0) from gst_adjustment_note));

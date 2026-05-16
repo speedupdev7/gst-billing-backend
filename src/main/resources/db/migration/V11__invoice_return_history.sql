@@ -63,7 +63,7 @@ create table if not exists invoice_return_item (
     constraint fk_return_item_invoice_item
         foreign key (invoice_item_id) references invoice_item (invoice_item_id),
     constraint fk_return_item_item
-        foreign key (item_id) references item_master (item_id)
+        foreign key (item_id) references master_item (item_id)
 );
 
 create trigger trg_invoice_return_updated_at

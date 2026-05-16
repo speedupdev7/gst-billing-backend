@@ -42,10 +42,10 @@ create table if not exists invoice_record (
     updated_at        timestamp default current_timestamp,
 
     constraint fk_invoice_unit
-        foreign key (unit_id) references unit_master (unit_id),
+        foreign key (unit_id) references master_unit (unit_id),
 
     constraint fk_invoice_customer
-        foreign key (customer_id) references customer_master (customer_id)
+        foreign key (customer_id) references master_customer (customer_id)
 );
 
 -- =========================================================
@@ -83,7 +83,7 @@ create table if not exists invoice_item (
         foreign key (invoice_id) references invoice_record (invoice_id),
 
     constraint fk_invoice_item_item
-        foreign key (item_id) references item_master (item_id)
+        foreign key (item_id) references master_item (item_id)
 );
 
 -- =========================================================
@@ -165,10 +165,10 @@ create table if not exists gst_adjustment_note (
         foreign key (original_invoice_id) references invoice_record (invoice_id),
 
     constraint fk_note_unit
-        foreign key (unit_id) references unit_master (unit_id),
+        foreign key (unit_id) references master_unit (unit_id),
 
     constraint fk_note_customer
-        foreign key (customer_id) references customer_master (customer_id)
+        foreign key (customer_id) references master_customer (customer_id)
 );
 
 -- =========================================================

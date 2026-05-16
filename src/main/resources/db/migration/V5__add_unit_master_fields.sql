@@ -1,11 +1,11 @@
 -- =========================================================
 -- Flyway Migration V5
--- Description : Add additional fields to unit_master table
+-- Description : Add additional fields to master_unit table
 -- Database    : PostgreSQL
 -- =========================================================
 
--- Add new columns to unit_master table
-alter table unit_master
+-- Add new columns to master_unit table
+alter table master_unit
 add column if not exists pan varchar(10),
 add column if not exists city varchar(100),
 add column if not exists pin_code varchar(10),

@@ -8,7 +8,7 @@
 -- ======================
 -- QUALIFICATION MASTER SEED DATA
 -- ======================
-insert into qualification_master (qualification_code, qualification_name, description, is_active)
+insert into master_qualification (qualification_code, qualification_name, description, is_active)
 values
 ('SSC', 'Secondary School Certificate', '10th Standard education qualification', true),
 ('HSC', 'Higher Secondary Certificate', '12th Standard education qualification', true),
@@ -40,7 +40,7 @@ values
 ON CONFLICT (qualification_code) DO NOTHING;
 
 -- Ensure sequence is in sync
-select setval(pg_get_serial_sequence('qualification_master','qualification_id'), (select coalesce(max(qualification_id),0) from qualification_master));
+select setval(pg_get_serial_sequence('master_qualification','qualification_id'), (select coalesce(max(qualification_id),0) from master_qualification));
 
 -- =========================================================
 -- END OF SEED MIGRATION V7

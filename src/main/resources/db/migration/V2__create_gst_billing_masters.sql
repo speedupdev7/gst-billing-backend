@@ -7,7 +7,7 @@
 -- =======================
 -- 1. UNIT (COMPANY) MASTER
 -- =======================
-create table if not exists unit_master (
+create table if not exists master_unit (
     unit_id      bigserial primary key,
     unit_name    varchar(150) not null,
     gstin        varchar(15) unique,
@@ -28,7 +28,7 @@ create table if not exists unit_master (
 -- =======================
 -- 2. ITEM MASTER
 -- =======================
-create table if not exists item_master (
+create table if not exists master_item (
     item_id    bigserial primary key,
     item_code  varchar(50) not null unique,
     item_name  varchar(200) not null,
@@ -52,7 +52,7 @@ create table if not exists item_master (
 -- =======================
 -- 3. CUSTOMER MASTER
 -- =======================
-create table if not exists customer_master (
+create table if not exists master_customer (
     customer_id   bigserial primary key,
     customer_name varchar(200) not null,
     gstin         varchar(15),
@@ -76,7 +76,7 @@ create table if not exists customer_master (
 -- =======================
 -- 4. SUPPLIER MASTER
 -- =======================
-create table if not exists supplier_master (
+create table if not exists master_supplier (
     supplier_id   bigserial primary key,
     supplier_name varchar(200) not null,
     gstin         varchar(15),
@@ -110,36 +110,36 @@ $$ language plpgsql;
 -- =======================
 -- UNIT MASTER
 -- =======================
-drop trigger if exists trg_unit_updated_at on unit_master;
+drop trigger if exists trg_unit_updated_at on master_unit;
 create trigger trg_unit_updated_at
-before update on unit_master
+before update on master_unit
 for each row
 execute function set_updated_at();
 
 -- =======================
 -- ITEM MASTER
 -- =======================
-drop trigger if exists trg_item_updated_at on item_master;
+drop trigger if exists trg_item_updated_at on master_item;
 create trigger trg_item_updated_at
-before update on item_master
+before update on master_item
 for each row
 execute function set_updated_at();
 
 -- =======================
 -- CUSTOMER MASTER
 -- =======================
-drop trigger if exists trg_customer_updated_at on customer_master;
+drop trigger if exists trg_customer_updated_at on master_customer;
 create trigger trg_customer_updated_at
-before update on customer_master
+before update on master_customer
 for each row
 execute function set_updated_at();
 
 -- =======================
 -- SUPPLIER MASTER
 -- =======================
-drop trigger if exists trg_supplier_updated_at on supplier_master;
+drop trigger if exists trg_supplier_updated_at on master_supplier;
 create trigger trg_supplier_updated_at
-before update on supplier_master
+before update on master_supplier
 for each row
 execute function set_updated_at();
 

@@ -8,7 +8,7 @@
 -- ======================
 -- CITY MASTER SEED DATA
 -- ======================
-insert into city_master (city_code, city_name, state_name, country, is_active)
+insert into master_city (city_code, city_name, state_name, country, is_active)
 values
 -- Maharashtra
 ('MUM', 'Mumbai', 'Maharashtra', 'India', true),
@@ -196,7 +196,7 @@ values
 ON CONFLICT (city_code) DO NOTHING;
 
 -- Ensure sequence is in sync
-select setval(pg_get_serial_sequence('city_master','city_id'), (select coalesce(max(city_id),0) from city_master));
+select setval(pg_get_serial_sequence('master_city','city_id'), (select coalesce(max(city_id),0) from master_city));
 
 -- =========================================================
 -- END OF SEED MIGRATION V8
