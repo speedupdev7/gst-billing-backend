@@ -39,6 +39,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -56,6 +58,9 @@ public class InvoiceServiceImpl implements InvoiceService {
     private InvoiceRecordRepository invoiceRecordRepository;
 
     @Autowired
+    private com.gst.billing.repository.InvoiceSequenceRepository invoiceSequenceRepository;
+
+    @Autowired
     private InvoiceItemRepository invoiceItemRepository;
 
     @Autowired
@@ -63,6 +68,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Autowired
     private InvoiceBalanceRepository invoiceBalanceRepository;
+
+    private static final int MAX_SEQUENCE_RETRIES = 8;
+
 
     @Autowired
     private InvoiceReturnRepository invoiceReturnRepository;
@@ -85,6 +93,10 @@ public class InvoiceServiceImpl implements InvoiceService {
         validateInvoiceRequest(invoiceRecordDTO);
         preparePaymentsAndBalance(invoiceRecordDTO);
         InvoiceRecordEntity invoiceRecordEntity = toInvoiceRecordEntity(invoiceRecordDTO);
+        // always generate invoice number server-side - never use client input
+        LocalDate dt = invoiceRecordEntity.getInvoiceDate() != null ? invoiceRecordEntity.getInvoiceDate() : LocalDate.now();
+        String invoiceNo = generateNextInvoiceNo(dt);
+        invoiceRecordEntity.setInvoiceNo(invoiceNo);
         InvoiceRecordEntity savedInvoice = invoiceRecordRepository.save(invoiceRecordEntity);
 
         List<InvoiceItemEntity> savedItems = saveInvoiceItems(savedInvoice, invoiceRecordDTO.getItems());
@@ -906,6 +918,54 @@ public class InvoiceServiceImpl implements InvoiceService {
         html.append("<div class='footer'>This is a generated GST invoice. Please verify all details before accepting.</div>");
         html.append("</body></html>");
         return html.toString();
+    }
+
+    private String generateNextInvoiceNo(LocalDate date) {
+        String fy = computeFinancialYear(date);
+        int attempts = 0;
+        while (attempts < MAX_SEQUENCE_RETRIES) {
+            attempts++;
+            try {
+                var opt = invoiceSequenceRepository.findByFy(fy);
+                com.gst.billing.entity.InvoiceSequenceEntity seq;
+                if (opt.isPresent()) {
+                    seq = opt.get();
+                    seq.setLastNumber(seq.getLastNumber() + 1);
+                } else {
+                    seq = new com.gst.billing.entity.InvoiceSequenceEntity();
+                    seq.setFy(fy);
+                    seq.setLastNumber(1);
+                }
+                seq = invoiceSequenceRepository.save(seq);
+                int number = seq.getLastNumber();
+                return String.format("INV/%s/%04d", fy, number);
+            } catch (OptimisticLockingFailureException | DataIntegrityViolationException ex) {
+                try {
+                    Thread.sleep(10L * attempts);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+                // retry
+            }
+        }
+        throw new RuntimeException("Failed to generate invoice number after retries");
+    }
+
+    private String computeFinancialYear(LocalDate date) {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+        int year = date.getYear();
+        LocalDate aprFirst = LocalDate.of(year, 4, 1);
+        int start, end;
+        if (date.isBefore(aprFirst)) {
+            start = year - 1;
+            end = year;
+        } else {
+            start = year;
+            end = year + 1;
+        }
+        return String.format("%02d-%02d", start % 100, end % 100);
     }
 
     private String safe(Object value) {

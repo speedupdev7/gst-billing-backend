@@ -31,6 +31,7 @@ public class InvoiceRecordDTO {
     private String unitName;
     private String vehicleNumber;
     private String narration;
+    private Integer version;
     private List<InvoiceItemDTO> items;
     private InvoiceBalanceDTO balance;
     private List<InvoicePaymentDTO> payments;

@@ -24,6 +24,10 @@ public class InvoiceRecordEntity extends BaseMasterEntity {
     @Column(name = "invoice_no", nullable = false, unique = true)
     private String invoiceNo;
 
+    @Version
+    @Column(name = "version")
+    private Integer version;
+
     @Column(name = "invoice_date", nullable = false)
     private LocalDate invoiceDate;
 
