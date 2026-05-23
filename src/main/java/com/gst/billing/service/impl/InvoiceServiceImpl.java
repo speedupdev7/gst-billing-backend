@@ -38,6 +38,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -53,6 +55,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class InvoiceServiceImpl implements InvoiceService {
+
+    private static final Logger log = LoggerFactory.getLogger(InvoiceServiceImpl.class);
+
 
     @Autowired
     private InvoiceRecordRepository invoiceRecordRepository;
@@ -90,6 +95,8 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     @Transactional
     public InvoiceRecordDTO createInvoice(InvoiceRecordDTO invoiceRecordDTO) {
+        log.debug("createInvoice called with customerId={} invoiceDate={}", invoiceRecordDTO == null ? null : invoiceRecordDTO.getCustomerId(),
+            invoiceRecordDTO == null ? null : invoiceRecordDTO.getInvoiceDate());
         validateInvoiceRequest(invoiceRecordDTO);
         preparePaymentsAndBalance(invoiceRecordDTO);
         InvoiceRecordEntity invoiceRecordEntity = toInvoiceRecordEntity(invoiceRecordDTO);
@@ -98,6 +105,8 @@ public class InvoiceServiceImpl implements InvoiceService {
         String invoiceNo = generateNextInvoiceNo(dt);
         invoiceRecordEntity.setInvoiceNo(invoiceNo);
         InvoiceRecordEntity savedInvoice = invoiceRecordRepository.save(invoiceRecordEntity);
+        log.debug("Saved invoice id={} customerId={}", savedInvoice.getInvoiceId(),
+            savedInvoice.getCustomer() == null ? null : savedInvoice.getCustomer().getCustomerId());
 
         List<InvoiceItemEntity> savedItems = saveInvoiceItems(savedInvoice, invoiceRecordDTO.getItems());
         InvoiceBalanceEntity savedBalance = saveInvoiceBalance(savedInvoice, invoiceRecordDTO.getBalance());
@@ -379,9 +388,11 @@ public class InvoiceServiceImpl implements InvoiceService {
         BeanUtils.copyProperties(dto, entity);
 
         if (dto.getCustomerId() != null) {
+            log.debug("Resolving customer for id={}", dto.getCustomerId());
             CustomerMasterEntity customer = customerMasterRepository.findById(dto.getCustomerId())
                     .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + dto.getCustomerId()));
             entity.setCustomer(customer);
+            log.debug("Resolved customer id={} name={}", customer.getCustomerId(), customer.getCustomerName());
         }
 
         if (dto.getUnitId() != null) {
@@ -809,6 +820,11 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (entity.getInvoice() != null) {
             dto.setInvoiceNo(entity.getInvoice().getInvoiceNo());
             dto.setInvoiceDate(entity.getInvoice().getInvoiceDate());
+
+            if (entity.getInvoice().getCustomer() != null) {
+                dto.setCustomerId(entity.getInvoice().getCustomer().getCustomerId());
+                dto.setCustomerName(entity.getInvoice().getCustomer().getCustomerName());
+            }
 
             if (entity.getInvoice().getUnit() != null) {
                 dto.setUnitName(entity.getInvoice().getUnit().getUnitName());
