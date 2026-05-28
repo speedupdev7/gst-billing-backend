@@ -35,18 +35,4 @@ public class ItemMasterEntity extends BaseMasterEntity {
     @Column(name = "gst_rate")
     private BigDecimal gstRate;
 
-    @Column(name = "purchase_price")
-    private BigDecimal purchasePrice;
-
-    @Column(name = "sale_price")
-    private BigDecimal salePrice;
-
-    @Column(name = "mrp")
-    private BigDecimal mrp;
-
-    @Column(name = "opening_stock")
-    private Integer openingStock;
-
-    @Column(name = "batch_code")
-    private String batchCode;
 }

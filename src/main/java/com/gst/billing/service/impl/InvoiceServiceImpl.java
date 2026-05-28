@@ -29,6 +29,7 @@ import com.gst.masterdata.entity.UnitMasterEntity;
 import com.gst.masterdata.exceptions.ResourceNotFoundException;
 import com.gst.masterdata.repository.CustomerMasterRepository;
 import com.gst.masterdata.repository.ItemMasterRepository;
+import com.gst.masterdata.repository.ItemOpeningStockRepository;
 import com.gst.masterdata.repository.UnitMasterRepository;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import org.springframework.beans.BeanUtils;
@@ -88,6 +89,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Autowired
     private ItemMasterRepository itemMasterRepository;
+
+    @Autowired
+    private ItemOpeningStockRepository itemOpeningStockRepository;
 
     @Autowired
     private UnitMasterRepository unitMasterRepository;
@@ -465,7 +469,10 @@ public class InvoiceServiceImpl implements InvoiceService {
                     .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + dto.getItemId()));
             entity.setItem(item);
             if (entity.getBatchCode() == null || entity.getBatchCode().isBlank()) {
-                entity.setBatchCode(item.getBatchCode());
+                itemOpeningStockRepository.findByItemItemIdAndIsDeletedFalse(dto.getItemId())
+                        .map(openingStock -> openingStock.getBatchCode())
+                        .filter(batchCode -> batchCode != null && !batchCode.isBlank())
+                        .ifPresent(entity::setBatchCode);
             }
         }
 
