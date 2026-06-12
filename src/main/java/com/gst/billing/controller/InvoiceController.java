@@ -3,6 +3,7 @@ package com.gst.billing.controller;
 import com.gst.billing.dto.InvoiceBalanceDetailDTO;
 import com.gst.billing.dto.InvoiceRecordDTO;
 import com.gst.billing.dto.InvoiceReturnDTO;
+import com.gst.billing.dto.InvoiceReturnListDTO;
 import com.gst.billing.dto.InvoiceReturnRequestDTO;
 import com.gst.billing.dto.PagedResponse;
 import com.gst.billing.service.InvoiceService;
@@ -63,6 +64,14 @@ public class InvoiceController {
     @GetMapping("/{invoiceNo}/returns")
     public List<InvoiceReturnDTO> getInvoiceReturns(@PathVariable String invoiceNo) {
         return invoiceService.getInvoiceReturnsByInvoiceNumber(invoiceNo);
+    }
+
+    @GetMapping("/returns")
+    public PagedResponse<InvoiceReturnListDTO> getInvoiceReturns(
+            @RequestParam(required = false) LocalDate fromDate,
+            @RequestParam(required = false) LocalDate toDate,
+            @PageableDefault(size = 20, page = 0, sort = "returnDate", direction = Sort.Direction.DESC) Pageable pageable) {
+        return invoiceService.getInvoiceReturnList(fromDate, toDate, pageable);
     }
 
     @GetMapping

@@ -8,6 +8,7 @@ import com.gst.billing.dto.InvoiceRecordDTO;
 import com.gst.billing.dto.InvoiceReturnDTO;
 import com.gst.billing.dto.InvoiceReturnItemDTO;
 import com.gst.billing.dto.InvoiceReturnItemRequestDTO;
+import com.gst.billing.dto.InvoiceReturnListDTO;
 import com.gst.billing.dto.InvoiceReturnRequestDTO;
 import com.gst.billing.dto.PagedResponse;
 import com.gst.billing.entity.InvoiceBalanceEntity;
@@ -252,6 +253,26 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .stream()
                 .map(this::toInvoiceReturnDTO)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PagedResponse<InvoiceReturnListDTO> getInvoiceReturnList(LocalDate fromDate, LocalDate toDate, Pageable pageable) {
+        Page<InvoiceReturnEntity> page = invoiceReturnRepository.findByReturnDateRangePageable(fromDate, toDate, pageable);
+        List<InvoiceReturnListDTO> content = page.stream()
+                .map(this::toInvoiceReturnListDTO)
+                .collect(Collectors.toList());
+        return new PagedResponse<>(
+                content,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isLast(),
+                page.isFirst(),
+                page.getNumberOfElements(),
+                page.isEmpty()
+        );
     }
 
     @Override
@@ -681,6 +702,19 @@ public class InvoiceServiceImpl implements InvoiceService {
         }
         List<InvoiceReturnItemEntity> returnItems = invoiceReturnItemRepository.findByInvoiceReturnReturnIdAndIsDeletedFalse(entity.getReturnId());
         dto.setItems(returnItems.stream().map(this::toInvoiceReturnItemDTO).collect(Collectors.toList()));
+        return dto;
+    }
+
+    private InvoiceReturnListDTO toInvoiceReturnListDTO(InvoiceReturnEntity entity) {
+        InvoiceReturnListDTO dto = new InvoiceReturnListDTO();
+        dto.setReturnNo(entity.getReturnNo());
+        dto.setInvoiceNo(entity.getInvoice() != null ? entity.getInvoice().getInvoiceNo() : null);
+        dto.setReturnDate(entity.getReturnDate());
+        if (entity.getInvoice() != null && entity.getInvoice().getCustomer() != null) {
+            dto.setCustomerName(entity.getInvoice().getCustomer().getCustomerName());
+        }
+        dto.setReasonCode(entity.getReasonCode());
+        dto.setFinalAmount(entity.getFinalAmount());
         return dto;
     }
 

@@ -3,6 +3,7 @@ package com.gst.billing.service;
 import com.gst.billing.dto.InvoiceBalanceDetailDTO;
 import com.gst.billing.dto.InvoiceRecordDTO;
 import com.gst.billing.dto.InvoiceReturnDTO;
+import com.gst.billing.dto.InvoiceReturnListDTO;
 import com.gst.billing.dto.InvoiceReturnRequestDTO;
 import com.gst.billing.dto.PagedResponse;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,7 @@ public interface InvoiceService {
     InvoiceRecordDTO getInvoiceByNumber(String invoiceNo);
     InvoiceReturnDTO createInvoiceReturn(String invoiceNo, InvoiceReturnRequestDTO returnRequest);
     List<InvoiceReturnDTO> getInvoiceReturnsByInvoiceNumber(String invoiceNo);
+    PagedResponse<InvoiceReturnListDTO> getInvoiceReturnList(LocalDate fromDate, LocalDate toDate, Pageable pageable);
     List<InvoiceRecordDTO> getAllInvoices();
     List<InvoiceRecordDTO> searchInvoicesByNumber(String invoiceNoPrefix);
     void deleteInvoice(Long invoiceId);
