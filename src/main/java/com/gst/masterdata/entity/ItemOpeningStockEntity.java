@@ -6,9 +6,12 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
-@Table(name = "item_opening_stock")
+@Table(name = "item_opening_stock", uniqueConstraints = {
+        @UniqueConstraint(name = "uq_item_opening_stock_item_batch", columnNames = {"item_id", "batch_code"})
+})
 @Getter
 @Setter
 public class ItemOpeningStockEntity extends BaseMasterEntity {
@@ -36,4 +39,14 @@ public class ItemOpeningStockEntity extends BaseMasterEntity {
 
     @Column(name = "mrp")
     private BigDecimal mrp;
+
+    @Column(name = "supplier_name")
+    private String supplierName;
+
+    @Column(name = "remarks", columnDefinition = "text")
+    private String remarks;
+
+    @Column(name = "expiry_date")
+    private LocalDate expiryDate;
 }
+

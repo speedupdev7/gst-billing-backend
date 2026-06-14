@@ -1,6 +1,8 @@
 package com.gst.masterdata.service;
 
 import com.gst.masterdata.dto.ItemMasterDTO;
+import com.gst.masterdata.dto.CreateOpeningStockDTO;
+import com.gst.masterdata.dto.OpeningStockItemDTO;
 
 import java.util.List;
 
@@ -11,4 +13,6 @@ public interface ItemMasterService {
     List<ItemMasterDTO> getAllItems();
     List<ItemMasterDTO> searchItemsByNamePrefix(String itemNamePrefix);
     void deleteItem(Long itemId);
+    com.gst.masterdata.dto.OpeningStockReportDTO getOpeningStockReport();
+    OpeningStockItemDTO createOpeningStock(CreateOpeningStockDTO createOpeningStockDTO);
 }

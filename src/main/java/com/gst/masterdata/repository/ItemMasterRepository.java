@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface ItemMasterRepository extends JpaRepository<ItemMasterEntity, Long> {
 
-    List<ItemMasterEntity> findTop20ByItemNameStartingWithIgnoreCaseAndIsDeletedFalse(String itemNamePrefix);
+    List<ItemMasterEntity> findTop20ByItemNameContainingIgnoreCaseAndIsDeletedFalse(String itemNameSubstring);
 }

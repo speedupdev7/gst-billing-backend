@@ -1,6 +1,8 @@
 package com.gst.masterdata.controller;
 
 import com.gst.masterdata.dto.ItemMasterDTO;
+import com.gst.masterdata.dto.CreateOpeningStockDTO;
+import com.gst.masterdata.dto.OpeningStockItemDTO;
 import com.gst.masterdata.service.ItemMasterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,11 @@ public class ItemMasterController {
         return itemMasterService.createItem(itemMasterDTO);
     }
 
+    @PostMapping("/opening-stock")
+    public OpeningStockItemDTO createOpeningStock(@RequestBody CreateOpeningStockDTO createOpeningStockDTO) {
+        return itemMasterService.createOpeningStock(createOpeningStockDTO);
+    }
+
     @PutMapping("/{itemId}")
     public ItemMasterDTO updateItem(@PathVariable Long itemId, @RequestBody ItemMasterDTO itemMasterDTO) {
         return itemMasterService.updateItem(itemId, itemMasterDTO);
@@ -33,6 +40,11 @@ public class ItemMasterController {
     @GetMapping
     public List<ItemMasterDTO> getAllItems() {
         return itemMasterService.getAllItems();
+    }
+
+    @GetMapping("/opening-stock-report")
+    public com.gst.masterdata.dto.OpeningStockReportDTO getOpeningStockReport() {
+        return itemMasterService.getOpeningStockReport();
     }
 
     @GetMapping("/search")

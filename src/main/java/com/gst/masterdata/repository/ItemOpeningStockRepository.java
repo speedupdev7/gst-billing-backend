@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface ItemOpeningStockRepository extends JpaRepository<ItemOpeningStockEntity, Long> {
     Optional<ItemOpeningStockEntity> findByItemItemIdAndIsDeletedFalse(Long itemId);
+    Optional<ItemOpeningStockEntity> findByItemItemIdAndBatchCodeAndIsDeletedFalse(Long itemId, String batchCode);
     List<ItemOpeningStockEntity> findByItemItemIdInAndIsDeletedFalse(List<Long> itemIds);
 }
