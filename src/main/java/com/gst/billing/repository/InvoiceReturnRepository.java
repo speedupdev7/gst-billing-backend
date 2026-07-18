@@ -29,4 +29,13 @@ public interface InvoiceReturnRepository extends JpaRepository<InvoiceReturnEnti
     Page<InvoiceReturnEntity> findByReturnDateRangePageable(@Param("fromDate") LocalDate fromDate,
                                                              @Param("toDate") LocalDate toDate,
                                                              Pageable pageable);
+
+    @Query(value = "select r from InvoiceReturnEntity r " +
+            "left join fetch r.invoice i " +
+            "left join fetch i.customer c " +
+            "where r.isDeleted = false " +
+            "and (:fromDate is null or r.returnDate >= :fromDate) " +
+            "and (:toDate is null or r.returnDate <= :toDate)")
+    List<InvoiceReturnEntity> findByReturnDateRange(@Param("fromDate") LocalDate fromDate,
+                                                    @Param("toDate") LocalDate toDate);
 }

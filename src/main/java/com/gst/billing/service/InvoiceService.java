@@ -20,6 +20,8 @@ public interface InvoiceService {
     InvoiceReturnDTO createInvoiceReturn(String invoiceNo, InvoiceReturnRequestDTO returnRequest);
     List<InvoiceReturnDTO> getInvoiceReturnsByInvoiceNumber(String invoiceNo);
     PagedResponse<InvoiceReturnListDTO> getInvoiceReturnList(LocalDate fromDate, LocalDate toDate, Pageable pageable);
+    java.util.List<InvoiceReturnListDTO> getInvoiceReturnListAll(LocalDate fromDate, LocalDate toDate);
+    com.gst.billing.dto.InvoiceReturnTotalsDTO getInvoiceReturnTotals(LocalDate fromDate, LocalDate toDate, String returnType, String reasonCode);
     List<InvoiceRecordDTO> getAllInvoices();
     List<InvoiceRecordDTO> searchInvoicesByNumber(String invoiceNoPrefix);
     void deleteInvoice(Long invoiceId);

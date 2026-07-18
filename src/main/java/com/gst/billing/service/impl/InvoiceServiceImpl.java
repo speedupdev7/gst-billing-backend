@@ -276,6 +276,43 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public java.util.List<InvoiceReturnListDTO> getInvoiceReturnListAll(LocalDate fromDate, LocalDate toDate) {
+        java.util.List<InvoiceReturnEntity> list = invoiceReturnRepository.findByReturnDateRange(fromDate, toDate);
+        return list.stream().map(this::toInvoiceReturnListDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public com.gst.billing.dto.InvoiceReturnTotalsDTO getInvoiceReturnTotals(LocalDate fromDate, LocalDate toDate, String returnType, String reasonCode) {
+        java.util.List<InvoiceReturnEntity> list = invoiceReturnRepository.findByReturnDateRange(fromDate, toDate);
+        java.math.BigDecimal totalBase = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal totalTax = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal totalRefund = java.math.BigDecimal.ZERO;
+
+        for (InvoiceReturnEntity e : list) {
+            if (returnType != null && !returnType.trim().isEmpty()) {
+                if (e.getReturnType() == null || !e.getReturnType().toLowerCase().contains(returnType.trim().toLowerCase())) continue;
+            }
+            if (reasonCode != null && !reasonCode.trim().isEmpty()) {
+                if (e.getReasonCode() == null || !e.getReasonCode().toLowerCase().contains(reasonCode.trim().toLowerCase())) continue;
+            }
+
+            if (e.getTaxableAmount() != null) totalBase = totalBase.add(e.getTaxableAmount());
+            if (e.getTotalCgst() != null) totalTax = totalTax.add(e.getTotalCgst());
+            if (e.getTotalSgst() != null) totalTax = totalTax.add(e.getTotalSgst());
+            if (e.getTotalIgst() != null) totalTax = totalTax.add(e.getTotalIgst());
+            if (e.getFinalAmount() != null) totalRefund = totalRefund.add(e.getFinalAmount());
+        }
+
+        com.gst.billing.dto.InvoiceReturnTotalsDTO dto = new com.gst.billing.dto.InvoiceReturnTotalsDTO();
+        dto.setTotalBase(totalBase);
+        dto.setTotalTax(totalTax);
+        dto.setTotalRefund(totalRefund);
+        return dto;
+    }
+
+    @Override
     public List<InvoiceRecordDTO> getAllInvoices() {
         return invoiceRecordRepository.findByIsDeletedFalse().stream()
                 .map(record -> {
