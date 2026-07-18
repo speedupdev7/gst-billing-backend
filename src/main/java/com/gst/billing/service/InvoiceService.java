@@ -22,6 +22,7 @@ public interface InvoiceService {
     PagedResponse<InvoiceReturnListDTO> getInvoiceReturnList(LocalDate fromDate, LocalDate toDate, Pageable pageable);
     java.util.List<InvoiceReturnListDTO> getInvoiceReturnListAll(LocalDate fromDate, LocalDate toDate);
     com.gst.billing.dto.InvoiceReturnTotalsDTO getInvoiceReturnTotals(LocalDate fromDate, LocalDate toDate, String returnType, String reasonCode);
+    com.gst.billing.dto.GstReportDTO getGstReport(java.time.LocalDate fromDate, java.time.LocalDate toDate, String supplyType, String gstSlab);
     List<InvoiceRecordDTO> getAllInvoices();
     List<InvoiceRecordDTO> searchInvoicesByNumber(String invoiceNoPrefix);
     void deleteInvoice(Long invoiceId);

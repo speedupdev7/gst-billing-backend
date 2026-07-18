@@ -10,4 +10,6 @@ import java.util.List;
 public interface ItemMasterRepository extends JpaRepository<ItemMasterEntity, Long> {
 
     List<ItemMasterEntity> findTop20ByItemNameContainingIgnoreCaseAndIsDeletedFalse(String itemNameSubstring);
+
+    List<ItemMasterEntity> findByIsDeletedFalse();
 }

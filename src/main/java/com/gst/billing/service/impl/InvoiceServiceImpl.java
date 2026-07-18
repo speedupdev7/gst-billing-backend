@@ -9,6 +9,7 @@ import com.gst.billing.dto.InvoiceReturnDTO;
 import com.gst.billing.dto.InvoiceReturnItemDTO;
 import com.gst.billing.dto.InvoiceReturnItemRequestDTO;
 import com.gst.billing.dto.InvoiceReturnListDTO;
+import com.gst.billing.dto.GstSlabDTO;
 import com.gst.billing.dto.InvoiceReturnRequestDTO;
 import com.gst.billing.dto.PagedResponse;
 import com.gst.billing.entity.InvoiceBalanceEntity;
@@ -310,6 +311,105 @@ public class InvoiceServiceImpl implements InvoiceService {
         dto.setTotalTax(totalTax);
         dto.setTotalRefund(totalRefund);
         return dto;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public com.gst.billing.dto.GstReportDTO getGstReport(LocalDate fromDate, LocalDate toDate, String supplyType, String gstSlab) {
+        java.util.List<InvoiceRecordDTO> invoices = getAllInvoices();
+
+        if (fromDate != null && toDate != null) {
+            invoices = invoices.stream()
+                    .filter(i -> {
+                        java.time.LocalDate d = i.getInvoiceDate();
+                        return d != null && (!d.isBefore(fromDate)) && (!d.isAfter(toDate));
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        // supplyType filter: if 'Interstate' then igst>0, if 'Intrastate' then cgst+sgst>0
+        if (supplyType != null && !supplyType.trim().isEmpty() && !"All".equalsIgnoreCase(supplyType.trim())) {
+            String st = supplyType.trim().toLowerCase();
+            if (st.contains("inter")) {
+                invoices = invoices.stream().filter(i -> i.getTotalIgst() != null && i.getTotalIgst().compareTo(java.math.BigDecimal.ZERO) > 0).collect(Collectors.toList());
+            } else if (st.contains("intra")) {
+                invoices = invoices.stream().filter(i -> ((i.getTotalCgst() != null && i.getTotalCgst().compareTo(java.math.BigDecimal.ZERO) > 0) || (i.getTotalSgst() != null && i.getTotalSgst().compareTo(java.math.BigDecimal.ZERO) > 0))).collect(Collectors.toList());
+            }
+        }
+
+        java.math.BigDecimal taxableTurnover = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal totalGstLiability = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal cgstCollected = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal sgstCollected = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal igstCollected = java.math.BigDecimal.ZERO;
+
+        // slab aggregation by gstRate string
+        java.util.Map<String, java.util.Set<String>> slabInvoiceSet = new java.util.HashMap<>(); // rate -> set of invoiceNos
+        java.util.Map<String, java.math.BigDecimal> slabTaxable = new java.util.HashMap<>();
+        java.util.Map<String, java.math.BigDecimal> slabGst = new java.util.HashMap<>();
+
+        for (InvoiceRecordDTO inv : invoices) {
+            if (inv.getTaxableAmount() != null) taxableTurnover = taxableTurnover.add(inv.getTaxableAmount());
+            java.math.BigDecimal gst = java.math.BigDecimal.ZERO;
+            if (inv.getTotalCgst() != null) { cgstCollected = cgstCollected.add(inv.getTotalCgst()); gst = gst.add(inv.getTotalCgst()); }
+            if (inv.getTotalSgst() != null) { sgstCollected = sgstCollected.add(inv.getTotalSgst()); gst = gst.add(inv.getTotalSgst()); }
+            if (inv.getTotalIgst() != null) { igstCollected = igstCollected.add(inv.getTotalIgst()); gst = gst.add(inv.getTotalIgst()); }
+            totalGstLiability = totalGstLiability.add(gst);
+
+            // per-item slab aggregation
+            if (inv.getItems() != null) {
+                for (InvoiceItemDTO item : inv.getItems()) {
+                    String rateKey = item.getGstRate() != null ? item.getGstRate().toPlainString() : "0";
+
+                    // apply gstSlab filter if provided
+                    if (gstSlab != null && !gstSlab.trim().isEmpty() && !"All".equalsIgnoreCase(gstSlab.trim())) {
+                        try {
+                            java.math.BigDecimal slabFilter = new java.math.BigDecimal(gstSlab.trim());
+                            if (item.getGstRate() == null || item.getGstRate().compareTo(slabFilter) != 0) {
+                                continue;
+                            }
+                        } catch (Exception ex) {
+                            // ignore parsing error and include all
+                        }
+                    }
+
+                    slabInvoiceSet.computeIfAbsent(rateKey, k -> new java.util.HashSet<>()).add(inv.getInvoiceNo());
+                    slabTaxable.put(rateKey, slabTaxable.getOrDefault(rateKey, java.math.BigDecimal.ZERO).add(item.getTaxableAmount() == null ? java.math.BigDecimal.ZERO : item.getTaxableAmount()));
+                    java.math.BigDecimal itemGst = java.math.BigDecimal.ZERO;
+                    if (item.getCgstAmt() != null) itemGst = itemGst.add(item.getCgstAmt());
+                    if (item.getSgstAmt() != null) itemGst = itemGst.add(item.getSgstAmt());
+                    if (item.getIgstAmt() != null) itemGst = itemGst.add(item.getIgstAmt());
+                    slabGst.put(rateKey, slabGst.getOrDefault(rateKey, java.math.BigDecimal.ZERO).add(itemGst));
+                }
+            }
+        }
+
+        java.util.List<GstSlabDTO> slabs = new java.util.ArrayList<>();
+        for (String rateKey : slabTaxable.keySet()) {
+            GstSlabDTO s = new GstSlabDTO();
+            s.setGstRate(rateKey + "%");
+            s.setInvoices(slabInvoiceSet.getOrDefault(rateKey, java.util.Collections.emptySet()).size());
+            s.setTaxableValue(slabTaxable.getOrDefault(rateKey, java.math.BigDecimal.ZERO));
+            s.setGstAmount(slabGst.getOrDefault(rateKey, java.math.BigDecimal.ZERO));
+            // effective rate = gstAmount / taxableValue *100 if taxableValue>0
+            java.math.BigDecimal effective = java.math.BigDecimal.ZERO;
+            if (s.getTaxableValue() != null && s.getTaxableValue().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                effective = s.getGstAmount().multiply(java.math.BigDecimal.valueOf(100)).divide(s.getTaxableValue(), 2, java.math.RoundingMode.HALF_UP);
+            }
+            s.setEffectiveRate(effective);
+            slabs.add(s);
+        }
+
+        com.gst.billing.dto.GstReportDTO out = new com.gst.billing.dto.GstReportDTO();
+        out.setTaxableTurnover(taxableTurnover);
+        out.setTotalGstLiability(totalGstLiability);
+        out.setFiledCount(0); // no filed flag available; front-end may supply or compute separately
+        out.setPendingCount(0);
+        out.setCgstCollected(cgstCollected);
+        out.setSgstCollected(sgstCollected);
+        out.setIgstCollected(igstCollected);
+        out.setSlabBreakup(slabs);
+        return out;
     }
 
     @Override

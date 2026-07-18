@@ -1,6 +1,7 @@
 package com.gst.billing.controller;
 
 import com.gst.billing.dto.BillingReportDTO;
+import com.gst.billing.dto.BillingReportPagedDTO;
 import com.gst.billing.dto.InvoiceRecordDTO;
 import com.gst.billing.dto.PagedResponse;
 import com.gst.billing.service.InvoiceService;
@@ -170,5 +171,33 @@ public class BillingReportController {
         out.setTotalTax(totals.getTotalTax());
         out.setTotalRefund(totals.getTotalRefund());
         return out;
+    }
+
+    @GetMapping("/gst")
+    public com.gst.billing.dto.GstReportDTO getGstReport(
+            @RequestParam(required = false) String month,
+            @RequestParam(required = false) String financialYear,
+            @RequestParam(required = false) String supplyType,
+            @RequestParam(required = false) String gstSlab,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate toDate
+    ) {
+        java.time.LocalDate start = fromDate;
+        java.time.LocalDate end = toDate;
+        if (start == null || end == null) {
+            if (month != null && financialYear != null) {
+                try {
+                    java.time.Month m = java.time.Month.valueOf(month.toUpperCase());
+                    String[] parts = financialYear.split("[-/]", 2);
+                    int baseYear = Integer.parseInt(parts[0]);
+                    int year = (m.getValue() >= 4) ? baseYear : baseYear + 1;
+                    start = java.time.LocalDate.of(year, m, 1);
+                    end = start.withDayOfMonth(start.lengthOfMonth());
+                } catch (Exception ex) {
+                    // fallback to null dates => full range
+                }
+            }
+        }
+        return invoiceService.getGstReport(start, end, supplyType, gstSlab);
     }
 }
