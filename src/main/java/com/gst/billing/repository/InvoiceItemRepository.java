@@ -9,4 +9,13 @@ import java.util.List;
 @Repository
 public interface InvoiceItemRepository extends JpaRepository<InvoiceItemEntity, Long> {
     List<InvoiceItemEntity> findByInvoiceInvoiceIdAndIsDeletedFalse(Long invoiceId);
+
+    @org.springframework.data.jpa.repository.Query("select coalesce(sum(ii.quantity),0) from InvoiceItemEntity ii " +
+            "where ii.item.itemId = :itemId " +
+            "and (:fromDate is null or ii.invoice.invoiceDate >= :fromDate) " +
+            "and (:toDate is null or ii.invoice.invoiceDate <= :toDate) " +
+            "and ii.isDeleted = false and ii.invoice.isDeleted = false")
+    java.math.BigDecimal sumQuantityByItemAndDateRange(@org.springframework.data.repository.query.Param("itemId") Long itemId,
+                                                      @org.springframework.data.repository.query.Param("fromDate") java.time.LocalDate fromDate,
+                                                      @org.springframework.data.repository.query.Param("toDate") java.time.LocalDate toDate);
 }

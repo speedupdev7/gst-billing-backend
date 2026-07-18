@@ -29,6 +29,10 @@ public class ItemMasterServiceImpl implements ItemMasterService {
 
     @Autowired
     private ItemOpeningStockRepository itemOpeningStockRepository;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.gst.billing.repository.PurchaseItemRepository purchaseItemRepository;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.gst.billing.repository.InvoiceItemRepository invoiceItemRepository;
 
     @Override
     public ItemMasterDTO createItem(ItemMasterDTO itemMasterDTO) {
@@ -206,6 +210,56 @@ public class ItemMasterServiceImpl implements ItemMasterService {
         report.setTotalQuantity(totalQuantity);
         report.setOverallStockValue(overallStockValue);
         return report;
+    }
+
+    @Override
+    public com.gst.masterdata.dto.CurrentStockReportDTO getCurrentStockReport(java.time.LocalDate fromDate, java.time.LocalDate toDate, Long supplierId, String category) {
+        java.util.List<com.gst.masterdata.entity.ItemMasterEntity> items = itemMasterRepository.findByIsDeletedFalse();
+
+        java.util.List<com.gst.masterdata.dto.CurrentStockItemDTO> rows = new java.util.ArrayList<>();
+        java.math.BigDecimal totalStockValue = java.math.BigDecimal.ZERO;
+
+        for (com.gst.masterdata.entity.ItemMasterEntity item : items) {
+            Long itemId = item.getItemId();
+            com.gst.masterdata.dto.CurrentStockItemDTO row = new com.gst.masterdata.dto.CurrentStockItemDTO();
+            row.setItemId(itemId);
+            row.setItemName(item.getItemName());
+            row.setUnit(item.getUnit());
+
+            // opening stock
+            java.util.Optional<com.gst.masterdata.entity.ItemOpeningStockEntity> openingOpt = itemOpeningStockRepository.findByItemItemIdAndIsDeletedFalse(itemId);
+            int opening = openingOpt.map(com.gst.masterdata.entity.ItemOpeningStockEntity::getOpeningStock).orElse(0);
+            row.setOpening(opening);
+
+            // inward (purchases)
+            java.math.BigDecimal inward = purchaseItemRepository.sumQuantityByItemAndDateRange(itemId, fromDate, toDate, supplierId);
+            row.setInward(inward);
+
+            // outward (sales)
+            java.math.BigDecimal outward = invoiceItemRepository.sumQuantityByItemAndDateRange(itemId, fromDate, toDate);
+            row.setOutward(outward);
+
+            // closing = opening + inward - outward
+            java.math.BigDecimal closing = java.math.BigDecimal.valueOf(opening).add(inward).subtract(outward);
+            row.setClosing(closing);
+
+            // rate: prefer opening purchase price if available
+            java.math.BigDecimal rate = openingOpt.map(com.gst.masterdata.entity.ItemOpeningStockEntity::getPurchasePrice).orElse(java.math.BigDecimal.ZERO);
+            row.setRate(rate);
+
+            java.math.BigDecimal stockValue = closing.multiply(rate == null ? java.math.BigDecimal.ZERO : rate);
+            row.setStockValue(stockValue);
+
+            totalStockValue = totalStockValue.add(stockValue == null ? java.math.BigDecimal.ZERO : stockValue);
+
+            rows.add(row);
+        }
+
+        com.gst.masterdata.dto.CurrentStockReportDTO out = new com.gst.masterdata.dto.CurrentStockReportDTO();
+        out.setItems(rows);
+        out.setTotalItems(rows.size());
+        out.setTotalStockValue(totalStockValue);
+        return out;
     }
 
     @Override

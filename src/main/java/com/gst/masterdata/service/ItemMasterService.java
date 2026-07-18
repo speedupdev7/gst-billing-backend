@@ -15,4 +15,5 @@ public interface ItemMasterService {
     void deleteItem(Long itemId);
     com.gst.masterdata.dto.OpeningStockReportDTO getOpeningStockReport();
     OpeningStockItemDTO createOpeningStock(CreateOpeningStockDTO createOpeningStockDTO);
+    com.gst.masterdata.dto.CurrentStockReportDTO getCurrentStockReport(java.time.LocalDate fromDate, java.time.LocalDate toDate, Long supplierId, String category);
 }

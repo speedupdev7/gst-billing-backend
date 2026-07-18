@@ -47,6 +47,18 @@ public class ItemMasterController {
         return itemMasterService.getOpeningStockReport();
     }
 
+        @GetMapping("/current-stock-report")
+        public com.gst.masterdata.dto.CurrentStockReportDTO getCurrentStockReport(
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+                @RequestParam(required = false) java.time.LocalDate fromDate,
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+                @RequestParam(required = false) java.time.LocalDate toDate,
+            @RequestParam(required = false) Long supplierId,
+            @RequestParam(required = false) String category
+        ) {
+        return itemMasterService.getCurrentStockReport(fromDate, toDate, supplierId, category);
+        }
+
     @GetMapping("/search")
     public List<ItemMasterDTO> searchItems(@RequestParam String q) {
         if (q == null || q.trim().length() < 3) {
