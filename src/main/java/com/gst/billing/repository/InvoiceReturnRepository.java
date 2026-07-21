@@ -20,12 +20,12 @@ public interface InvoiceReturnRepository extends JpaRepository<InvoiceReturnEnti
             "left join fetch r.invoice i " +
             "left join fetch i.customer c " +
             "where r.isDeleted = false " +
-            "and (:fromDate is null or r.returnDate >= :fromDate) " +
-            "and (:toDate is null or r.returnDate <= :toDate)",
+            "and r.returnDate >= coalesce(:fromDate, r.returnDate) " +
+            "and r.returnDate <= coalesce(:toDate, r.returnDate)",
             countQuery = "select count(r) from InvoiceReturnEntity r " +
                     "where r.isDeleted = false " +
-                    "and (:fromDate is null or r.returnDate >= :fromDate) " +
-                    "and (:toDate is null or r.returnDate <= :toDate)")
+                    "and r.returnDate >= coalesce(:fromDate, r.returnDate) " +
+                    "and r.returnDate <= coalesce(:toDate, r.returnDate)")
     Page<InvoiceReturnEntity> findByReturnDateRangePageable(@Param("fromDate") LocalDate fromDate,
                                                              @Param("toDate") LocalDate toDate,
                                                              Pageable pageable);
@@ -34,8 +34,8 @@ public interface InvoiceReturnRepository extends JpaRepository<InvoiceReturnEnti
             "left join fetch r.invoice i " +
             "left join fetch i.customer c " +
             "where r.isDeleted = false " +
-            "and (:fromDate is null or r.returnDate >= :fromDate) " +
-            "and (:toDate is null or r.returnDate <= :toDate)")
+            "and r.returnDate >= coalesce(:fromDate, r.returnDate) " +
+            "and r.returnDate <= coalesce(:toDate, r.returnDate)")
     List<InvoiceReturnEntity> findByReturnDateRange(@Param("fromDate") LocalDate fromDate,
                                                     @Param("toDate") LocalDate toDate);
 }

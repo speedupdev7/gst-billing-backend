@@ -12,8 +12,8 @@ public interface PurchaseItemRepository extends JpaRepository<PurchaseItemEntity
 
     @org.springframework.data.jpa.repository.Query("select coalesce(sum(pi.quantity),0) from PurchaseItemEntity pi " +
             "where pi.item.itemId = :itemId " +
-            "and (:fromDate is null or pi.purchase.purchaseDate >= :fromDate) " +
-            "and (:toDate is null or pi.purchase.purchaseDate <= :toDate) " +
+            "and pi.purchase.purchaseDate >= coalesce(:fromDate, pi.purchase.purchaseDate) " +
+            "and pi.purchase.purchaseDate <= coalesce(:toDate, pi.purchase.purchaseDate) " +
             "and (:supplierId is null or pi.purchase.supplier.supplierId = :supplierId) " +
             "and pi.isDeleted = false and pi.purchase.isDeleted = false")
     java.math.BigDecimal sumQuantityByItemAndDateRange(@org.springframework.data.repository.query.Param("itemId") Long itemId,
